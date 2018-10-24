@@ -27,21 +27,13 @@ a{
    
 <br><br> 
 
-	<div class="row">																	<?php
-	if($_SESSION["role"] == 'admin')
-	{																					?>	
-		<a href="admin/" class="btn lg ghost">ADMIN PANEL</a>
-		<br><br><br>																	<?php	
-	}																					?>	
+	<div class="row">																	
 	
 	<a href="sales/todayList.php?ar=all" class="btn lg ghost">TODAY SALES</a>
     <br><br><br>
 
 	<a href="sales/list.php" class="btn lg ghost">ALL SALES</a>
     <br><br><br><br>
-	
-	<!--a href="company/" class="btn lg ghost">COMPANY SALE</a>
-    <br><br><br-->	
 		
    	<a href="ar/" class="btn lg ghost">AR DETAILS & POINTS</a>
     <br><br><br>	
@@ -55,9 +47,6 @@ a{
 	<a href="extraBags/" class="btn lg ghost">EXTRA BAGS</a>
 	<br><br><br>
 		
-	<a href="Salesforce/" class="btn lg ghost">SALESFORCE</a>
-    <br><br><br>	
-	
 	<a href="Sheet/" class="btn lg ghost">SHEET DELIVERY</a>
     <br><br><br>		
 
