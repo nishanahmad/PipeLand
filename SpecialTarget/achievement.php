@@ -52,17 +52,8 @@ if(isset($_SESSION["user_name"]))
 	
 	$fromString = $from.'-'.$month.'-'.$year;		
 	$fromDate = date("Y-m-d",strtotime($fromString));
-		
-	$zeroTargetMap = null;
-	$zeroTargetList = mysqli_query($con,"SELECT ar_id FROM special_target WHERE  fromDate <= '$fromDate' AND toDate>='$toDate' AND special_target = 0") or die(mysqli_error($con));		 
-	foreach($zeroTargetList as $zeroTarget)
-	{
-		$zeroTargetMap[$zeroTarget['ar_id']] = null;
-	}
 	
-	$zeroTargetIds = implode("','",array_keys($zeroTargetMap));		
-	
-	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name FROM ar_details WHERE isActive = 1 AND id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ") or die(mysqli_error($con));		 
+	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name FROM ar_details WHERE isActive = 1 AND Type LIKE '%AR%' ") or die(mysqli_error($con));		 
 	foreach($arList as $arObject)
 	{
 		$arNameMap[$arObject['id']] = $arObject['name'];
