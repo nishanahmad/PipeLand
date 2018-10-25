@@ -7,10 +7,11 @@ if(isset($_SESSION["user_name"]))
 
 	$urlId = $_GET['ar'];
 	
-	$arObjects = mysqli_query($con,"SELECT id,name FROM ar_details ORDER BY name ASC") or die(mysqli_error($con));	
+	$arObjects = mysqli_query($con,"SELECT id,name,shop_name FROM ar_details ORDER BY name ASC") or die(mysqli_error($con));	
 	foreach($arObjects as $ar)
 	{
-		$arMap[$ar['id']] = $ar['name']; 
+		$arMap[$ar['id']]['name'] = $ar['name']; 
+		$arMap[$ar['id']]['shop'] = $ar['shop_name']; 
 	}
 
 	if($_GET['ar'] != 'all')
@@ -39,7 +40,7 @@ if(isset($_SESSION["user_name"]))
 	<option value = "all" <?php if($urlId == 'all') echo 'selected';?> >ALL</option>													    	<?php
 	foreach($arMap as $arId => $arName)
 	{																																			?>
-		<option value="<?php echo $arId;?>" <?php if($urlId == $arId) echo 'selected';?>><?php echo $arName;?></option> 						<?php
+		<option value="<?php echo $arId;?>" <?php if($urlId == $arId) echo 'selected';?>><?php echo $arName['name'];?></option> 						<?php
 	}																																			?>
 </select>
 	  
@@ -50,6 +51,7 @@ if(isset($_SESSION["user_name"]))
 <div align="center"><table width="98%" class="table-responsive">
 <tr class="tableheader">
 <th>AR</th>
+<th>SHOP</th>
 <th>TRUCK NO</th>
 <th width="50px">SRP</th>
 <th width="50px;">SRH</th>
@@ -59,7 +61,6 @@ if(isset($_SESSION["user_name"]))
 <th>CUST. PHONE</th>
 <th>REMARKS</th>
 <th>ADDRESS1</th>
-<th>ADDRESS2</th>
 </tr>
 <?php
 	$f2r=0;
@@ -73,7 +74,8 @@ if(isset($_SESSION["user_name"]))
 		$srh = $srh + $row["srh"];
 ?>
 <tr>
-<td ><a href="edit.php?sales_id=<?php echo $row['sales_id'];?>"</a><?php echo $arMap[$row["ar_id"]]; ?></td>
+<td ><a href="edit.php?sales_id=<?php echo $row['sales_id'];?>"</a><?php echo $arMap[$row["ar_id"]]['name']; ?></td>
+<td ><?php echo $arMap[$row["ar_id"]]['shop']; ?></td>
 <td><?php echo $row["truck_no"]; ?></td>
 <td align="center"><?php echo $row["srp"]; ?></td>
 <td align="center"><?php echo $row["srh"]; ?></td>
@@ -83,7 +85,6 @@ if(isset($_SESSION["user_name"]))
 <td><?php echo $row["customer_phone"]; ?></td>
 <td><?php echo $row["remarks"]; ?></td>
 <td><?php echo $row["address1"]; ?></td>
-<td><?php echo $row["address2"]; ?></td>
 </tr>
 <?php
 	}
