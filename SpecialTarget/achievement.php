@@ -225,12 +225,6 @@ if(isset($_SESSION["user_name"]))
 		<a href="../index.php" class="link"><img alt='home' title='home' src='../images/home.png' width='50px' height='50px'/> </a>
 		<h1>SPECIAL TARGET ACHIEVEMENT</h1>
 		<br><br>
-		<select name="grouping" id="grouping" onchange="location.href= this.value ">
-			 <option selected value="#">No Grouping</option>   								
-			 <option value="achievement_user.php?">User Wise</option>
-			 <option value="achievement_area.php?">Area Wise</option>   								
-		</select>		
-		<br><br>
 		
 		<select id="jsYear" name="jsYear" class="textarea" onchange="return refreshYear();">																<?php	
 			$yearList = getYears();	

@@ -107,16 +107,7 @@ function rerender()
 	<input type="hidden" name="month" value="<?php echo $month;?>">
 	</table>
 	<br><br>
-	<?php 
-		$sql = "SELECT locked FROM target_locker WHERE year='$year' AND Month='$month' ";
-		$result = mysqli_query($con, $sql) or die(mysqli_error($con));
-		$row = mysqli_fetch_array($result,MYSQLI_ASSOC);
-		if($row['locked'] == 0)
-		{
-	?>		<div align="center"><input type="submit" name="submit" value="Submit"></div>		
-	<?php	
-		}		
-	?>
+		<div align="center"><input type="submit" name="submit" value="Submit" onclick="return confirm('Are you sure you want to update?')"></div>		
 	<br><br> 
 	</div> 
 </body>

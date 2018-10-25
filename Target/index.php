@@ -3,7 +3,7 @@ session_start();
 if(isset($_SESSION["user_name"]))
 {
 	$year = date("Y");
-	$month = date("m") - 1;
+	$month = date("m");
 	echo $year;
 	echo $month;	
 ?>

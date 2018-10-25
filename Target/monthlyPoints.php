@@ -18,6 +18,9 @@ if(isset($_SESSION["user_name"]))
 		$month = (int)date("m");
 	}
 
+	$zeroTargetMap = array();
+	$targetMap = array();
+	
 	$zeroTargetList = mysqli_query($con,"SELECT ar_id FROM target WHERE year = '$year' AND month  = '$month' AND target = 0") or die(mysqli_error($con));		 
 	foreach($zeroTargetList as $zeroTarget)
 	{
@@ -34,8 +37,9 @@ if(isset($_SESSION["user_name"]))
 		$arMap[$ar['id']]['shop'] = $ar['shop_name'];
 		$arMap[$ar['id']]['sap'] = $ar['sap_code'];
 	}				
-	
+
 	$arIds = implode("','",array_keys($arMap));
+	
 	$targetObjects = mysqli_query($con,"SELECT ar_id, target, payment_perc,rate FROM target WHERE  month = '$month' AND Year='$year' AND ar_id IN('$arIds')") or die(mysqli_error($con));		 
 	foreach($targetObjects as $target)
 	{
@@ -43,9 +47,6 @@ if(isset($_SESSION["user_name"]))
 		$targetMap[$target['ar_id']]['rate'] = $target['rate'];
 		$targetMap[$target['ar_id']]['payment_perc'] = $target['payment_perc'];
 	}
-	
-
-
 	$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 
 	$mainArray = array();
