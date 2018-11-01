@@ -17,10 +17,8 @@ if(isset($_SESSION["user_name"]))
 		$year = (int)date("Y");
 		$month = (int)date("m");
 	}
-
-	$zeroTargetMap = array();
-	$targetMap = array();
 	
+	$zeroTargetMap = array();
 	$zeroTargetList = mysqli_query($con,"SELECT ar_id FROM target WHERE year = '$year' AND month  = '$month' AND target = 0") or die(mysqli_error($con));		 
 	foreach($zeroTargetList as $zeroTarget)
 	{
@@ -37,9 +35,8 @@ if(isset($_SESSION["user_name"]))
 		$arMap[$ar['id']]['shop'] = $ar['shop_name'];
 		$arMap[$ar['id']]['sap'] = $ar['sap_code'];
 	}				
-
-	$arIds = implode("','",array_keys($arMap));
 	
+	$arIds = implode("','",array_keys($arMap));
 	$targetObjects = mysqli_query($con,"SELECT ar_id, target, payment_perc,rate FROM target WHERE  month = '$month' AND Year='$year' AND ar_id IN('$arIds')") or die(mysqli_error($con));		 
 	foreach($targetObjects as $target)
 	{
@@ -47,6 +44,9 @@ if(isset($_SESSION["user_name"]))
 		$targetMap[$target['ar_id']]['rate'] = $target['rate'];
 		$targetMap[$target['ar_id']]['payment_perc'] = $target['payment_perc'];
 	}
+	
+
+
 	$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 
 	$mainArray = array();
@@ -83,12 +83,15 @@ if(isset($_SESSION["user_name"]))
 <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
 <script type="text/javascript" language="javascript" src="../js/jquery.js"></script>
 <script type="text/javascript" language="javascript" src="../js/jquery.floatThead.min.js"></script>
+<script type="text/javascript" src="../js/jquery.tablesorter.min.js"></script> 
 <script src="../js/fileSaver.js"></script>
 <script src="../js/tableExport.js"></script>
 <script type="text/javascript" language="javascript">
 $(document).ready(function() {
 	$("#loader").hide();
 
+	$("#Points").tablesorter(); 
+	
  	$("#button").click(function(){
 		$("table").tableExport({
 				formats: ["xls"],    // (String[]), filetypes for the export
@@ -130,10 +133,9 @@ function rerender()
 		<a href="../index.php" class="link"><img alt='home' title='home' src='../images/home.png' width='50px' height='50px'/> </a>
 		<br><br>
 		<select id="jsMonth" name="jsMonth" class="textarea" onchange="return rerender();">																				<?php	
-			$monthList = mysqli_query($con, "SELECT DISTINCT month FROM target ORDER BY month ASC" ) or die(mysqli_error($con));	
-			foreach($monthList as $monthObj) 
+			for($i=1;$i<=12;$i++) 
 			{	
-	?>			<option value="<?php echo $monthObj['month'];?>" <?php if($monthObj['month'] == $month) echo 'selected';?>><?php echo getMonth($monthObj['month']);?></option>		<?php	
+	?>			<option value="<?php echo $i;?>" <?php if($i == $month) echo 'selected';?>><?php echo getMonth($i);?></option>		<?php	
 			}
 	?>	</select>					
 			&nbsp;&nbsp;
@@ -170,11 +172,16 @@ function rerender()
 		</thead>	
 							
 																																						<?php
+			$totalTarget = 0;
+			$totalSale = 0;	
+			$totalPoints = 0;		
+			$totalPaymentPoints = 0;					
 			foreach($targetMap as $arId => $targetArray)
 			{		
 				$target = $targetArray['target'];
 				$rate = $targetArray['rate'];
 				$payment_perc = $targetArray['payment_perc'];
+				$totalTarget = $totalTarget + $target;
 				if(!isset($mainArray[$arId]))
 				{
 					$mainArray[$arId]['actual_sale'] = null;
@@ -183,24 +190,43 @@ function rerender()
 					$mainArray[$arId]['point_perc'] = null;
 					$mainArray[$arId]['achieved_points'] = null;
 					$mainArray[$arId]['payment_points'] = null;
-				}																																	?>
-				
+				}																																	
+				$totalSale = $totalSale + $mainArray[$arId]['actual_sale'];
+				$totalPoints = $totalPoints + $mainArray[$arId]['points'];
+				$totalPaymentPoints = $totalPaymentPoints + $mainArray[$arId]['payment_points'];							?>
 				<tr align="center">
-				<td style="text-align:left;"><?php echo $arMap[$arId]['name'];?></b></td>
-				<td><?php echo $arMap[$arId]['mobile'];?></b></td>
-				<td style="text-align:left;"><?php echo $arMap[$arId]['shop'];?></b></td>
-				<td><?php echo $arMap[$arId]['sap'];?></b></td>
-				<td><?php echo $target;?></td>
-				<td><?php echo $mainArray[$arId]['actual_sale'];?></td>
-				<td><?php echo $rate;?></td>
-				<td><?php echo $mainArray[$arId]['points'];?></td>
-				<td><?php echo $mainArray[$arId]['actual_perc'].'%';?></td>
-				<td><?php echo $mainArray[$arId]['point_perc'].'%';?></td>
-				<td><?php echo $payment_perc;?></td>
-				<td><?php echo $mainArray[$arId]['achieved_points'];?></td>
-				<td><?php echo '<b>'.$mainArray[$arId]['payment_points'].'</b>';?></td>
+					<td style="text-align:left;"><?php echo $arMap[$arId]['name'];?></b></td>
+					<td><?php echo $arMap[$arId]['mobile'];?></b></td>
+					<td style="text-align:left;"><?php echo $arMap[$arId]['shop'];?></b></td>
+					<td><?php echo $arMap[$arId]['sap'];?></b></td>
+					<td><?php echo $target;?></td>
+					<td><?php echo $mainArray[$arId]['actual_sale'];?></td>
+					<td><?php echo $rate;?></td>
+					<td><?php echo $mainArray[$arId]['points'];?></td>
+					<td><?php echo $mainArray[$arId]['actual_perc'].'%';?></td>
+					<td><?php echo $mainArray[$arId]['point_perc'].'%';?></td>
+					<td><?php echo $payment_perc;?></td>
+					<td><?php echo $mainArray[$arId]['achieved_points'];?></td>
+					<td><?php echo '<b>'.$mainArray[$arId]['payment_points'].'</b>';?></td>
 				</tr>																															<?php
 			}																																	?>
+			<thead>
+				<tr>
+					<th style="width:20%;"></th>
+					<th style="width:12%;"></th>
+					<th style="width:25%;"></th>
+					<th style="width:10%;"></th>
+					<th><?php echo $totalTarget;?></th>
+					<th><?php echo $totalSale;?></th>
+					<th></th>
+					<th><?php echo $totalPoints;?></th>
+					<th><?php echo round($totalSale/$totalTarget*100,1)?>%</th>
+					<th></th>	
+					<th></th>	
+					<th></th>
+					<th><?php echo $totalPaymentPoints;?></th>
+				</tr>	
+			</thead>	
 		</table>
 		<br/><br/><br/><br/>
 	</div>
