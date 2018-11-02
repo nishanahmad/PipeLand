@@ -50,7 +50,7 @@ function rerender()
 <link href="../css/bootstrap.min.css" rel="stylesheet">
 <link href="../css/responstable.css" rel="stylesheet">
 <script type="text/javascript" language="javascript" src="../js/jquery.js"></script>
-<title>Target</title>
+<title><?php echo getMonth($month);?> Target</title>
 </head>
 <body>
 	<div style="width:100%;">
