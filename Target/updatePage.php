@@ -84,10 +84,12 @@ function rerender()
 			<th style="width:10%;text-align:center;">RATE</th>
 			<th style="width:10%;text-align:center;">PAYMENT %</th> 
 		</tr>					<?php
+	$total = 0;	
 	while($row = mysqli_fetch_array($result,MYSQLI_ASSOC)) 
 	{
 		$arId = $row['ar_id'];
 		$target = $row['target'];
+		$total = $total + $target;
 		$rate = $row['rate'];
 		$pp = $row['payment_perc'];
 		$company_target = $row['company_target'];
@@ -101,8 +103,15 @@ function rerender()
 			<td style="text-align:center;"><input type="text" style="text-align:center;width:70px;border:0px;background-color: transparent;" name="<?php echo $arId.'-rate';?>" value="<?php echo $rate; ?>"></td>		
 			<td style="text-align:center;"><input type="text" style="text-align:center;width:70px;border:0px;background-color: transparent;" name="<?php echo $arId.'-pp';?>" value="<?php echo $pp; ?>"></td>		
 		</tr>																												<?php
-	}						
-																									?>
+	}																														?>
+	<tr>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th><?php echo $total;?></th>
+		<th></th>
+		<th></th>
+	</tr>
 	<input type="hidden" name="year" value="<?php echo $year;?>">
 	<input type="hidden" name="month" value="<?php echo $month;?>">
 	</table>
