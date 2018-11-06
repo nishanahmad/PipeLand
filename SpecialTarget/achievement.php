@@ -52,8 +52,17 @@ if(isset($_SESSION["user_name"]))
 	
 	$fromString = $from.'-'.$month.'-'.$year;		
 	$fromDate = date("Y-m-d",strtotime($fromString));
+		
+	$zeroTargetMap = null;
+	$zeroTargetList = mysqli_query($con,"SELECT ar_id FROM special_target WHERE  fromDate <= '$fromDate' AND toDate>='$toDate' AND special_target = 0") or die(mysqli_error($con));		 
+	foreach($zeroTargetList as $zeroTarget)
+	{
+		$zeroTargetMap[$zeroTarget['ar_id']] = null;
+	}
 	
-	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name FROM ar_details WHERE isActive = 1 AND Type LIKE '%AR%' ") or die(mysqli_error($con));		 
+	$zeroTargetIds = implode("','",array_keys($zeroTargetMap));		
+	
+	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name FROM ar_details WHERE isActive = 1 AND id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ") or die(mysqli_error($con));		 
 	foreach($arList as $arObject)
 	{
 		$arNameMap[$arObject['id']] = $arObject['name'];
@@ -141,7 +150,10 @@ if(isset($_SESSION["user_name"]))
 		var hrf = window.location.href;
 		hrf = hrf.slice(0,hrf.indexOf("&removeToday="));
 		
-		window.location.href = hrf + "&removeToday=" + removeToday;
+		if(hrf.includes('?'))
+			window.location.href = hrf + "&removeToday=" + removeToday;
+		else
+			window.location.href = hrf + "?removeToday=" + removeToday;
 	}
 	
 	function refreshYear()
@@ -216,6 +228,12 @@ if(isset($_SESSION["user_name"]))
 		<a href="../index.php" class="link"><img alt='home' title='home' src='../images/home.png' width='50px' height='50px'/> </a>
 		<h1>SPECIAL TARGET ACHIEVEMENT</h1>
 		<br><br>
+		<select name="grouping" id="grouping" onchange="location.href= this.value ">
+			 <option selected value="#">No Grouping</option>   								
+			 <option value="achievement_user.php?">User Wise</option>
+			 <option value="achievement_area.php?">Area Wise</option>   								
+		</select>		
+		<br><br>
 		
 		<select id="jsYear" name="jsYear" class="textarea" onchange="return refreshYear();">																<?php	
 			$yearList = getYears();	
@@ -261,14 +279,17 @@ if(isset($_SESSION["user_name"]))
 					<th style="width:8%;">Spcl Target</th>
 					<th style="width:8%;">Actual Sale</th>
 					<th style="width:8%;">Balance</th>
-					<th style="width:3%;">Achieved%</th>
+					<th style="width:8%;">Actual%</th>
 					<th style="width:8%;">Extra Bags</th>				
+					<th style="width:3%;">Achieved%</th>
+					<th style="width:3%;">Points</th>
 				</tr>																																
 			</thead>																																							<?php
 			$targetTotal = 0;
 			$saleTotal = 0;
 			$extraTotal = 0;
 			$balanceTotal = 0;
+			$pointTotal = 0;
 			foreach($arNameMap as $arId =>$arName)
 			{		
 				if(isset($arTargetMap[$arId]))
@@ -285,9 +306,15 @@ if(isset($_SESSION["user_name"]))
 					$extraBags = 0;																													
 				
 				if($spclTarget != 0)
+				{
+					$actualPercentage = round(  $sale * 100 / $spclTarget,0);
 					$percentage = round(  ($sale + $extraBags) * 100 / $spclTarget,0);
+				}
 				else
-					$percentage = 0;
+				{
+					$actualPercentage = 0;
+					$percentage = 0;					
+				}
 				$balance = $spclTarget-$sale-$extraBags;
 				if($balance < 0)
 					$balance = 0;																													?>
@@ -297,29 +324,42 @@ if(isset($_SESSION["user_name"]))
 					<td><?php echo $arMobileMap[$arId];?></td>
 					<td><?php echo $spclTarget;?></td>
 					<td><?php echo $sale;?></td>
-					<td><?php echo $balance ?></td>							
-					<td><?php echo $percentage.'%';?></td>
+					<td><?php echo $balance ?></td>			
+					<td><?php echo $actualPercentage.'%'; ?></td>			
 					<td><?php echo $extraBags;?></td>
-				</tr>																																<?php
+					<td><?php echo $percentage.'%';?></td>																<?php 
+					if($percentage >= 100)
+					{
+						$pointTotal = $pointTotal + $sale;																			?>
+						<td><?php echo $sale;?></td>																	<?php
+					}
+					else
+					{																									?>
+						<td>0</td>																						<?php
+					}																									?>
+				</tr>																									<?php
 				$targetTotal = $targetTotal + $spclTarget;
 				$saleTotal = $saleTotal + $sale;
 				$extraTotal = $extraTotal + $arExtraMap[$arId];
 				$balanceTotal = $balanceTotal + $balance;																														
-		}
-		$percentageTotal = round(  ($saleTotal + $extraTotal) * 100 / $targetTotal,0);																?>
+			}
+			$actualPercentageTotal = round(  $saleTotal * 100 / $targetTotal,0);																
+			$percentageTotal = round(  ($saleTotal + $extraTotal) * 100 / $targetTotal,0);																?>
 				<thead>
 					<tr style="line-height:50px;background-color:#BEBEBE !important;font-family: Arial Black;">
 						<td colspan="3" style="text-align:right;font-size:20px;">Total</td>
 						<td style="font-size:15px;"><?php echo $targetTotal;?></td>
 						<td style="font-size:15px;"><?php echo $saleTotal;?></td>
 						<td style="font-size:15px;"><?php echo $balanceTotal;?></td>
-						<td style="font-size:15px;"><?php echo $percentageTotal.'%';?></td>
-						<td style="font-size:15px;"><?php echo $extraTotal;?></td>				
+						<td style="font-size:15px;"><?php echo $actualPercentageTotal.'%';?></td>
+						<td style="font-size:15px;"><?php echo $extraTotal;?></td>			
+						<td style="font-size:15px;"><?php echo $percentageTotal.'%';?></td>						
+						<td style="font-size:15px;"><?php echo $pointTotal;?></td>						
 					</tr>
 				</thead>
-		</table>
-		<br><br><br><br>
-		</div>
+			</table>
+			<br><br><br><br>
+			</div>
 </body>
 </html>
 <?php
