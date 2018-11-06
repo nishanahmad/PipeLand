@@ -53,7 +53,7 @@ if(isset($_SESSION["user_name"]))
 	$fromString = $from.'-'.$month.'-'.$year;		
 	$fromDate = date("Y-m-d",strtotime($fromString));
 		
-	$zeroTargetMap = null;
+	$zeroTargetMap = array();
 	$zeroTargetList = mysqli_query($con,"SELECT ar_id FROM special_target WHERE  fromDate <= '$fromDate' AND toDate>='$toDate' AND special_target = 0") or die(mysqli_error($con));		 
 	foreach($zeroTargetList as $zeroTarget)
 	{
