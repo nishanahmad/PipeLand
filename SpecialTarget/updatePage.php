@@ -72,20 +72,11 @@ if(isset($_SESSION["user_name"]))
 		</tr>																												<?php
 	}						
 																									?>
-	<input type="hidden" name="fromDate" value="<?php echo $fromDate;?>">
-	<input type="hidden" name="toDate" value="<?php echo $toDate;?>">
+		<input type="hidden" name="fromDate" value="<?php echo $fromDate;?>">
+		<input type="hidden" name="toDate" value="<?php echo $toDate;?>">
 	</table>
 	<br><br>
-	<?php 
-		$sql = "SELECT locked FROM special_target_locker WHERE from_date='$fromDate' AND to_date='$toDate' ";
-		$result = mysqli_query($con, $sql) or die(mysqli_error($con));
-		$row = mysqli_fetch_array($result,MYSQLI_ASSOC);
-		if($row['locked'] != true && count($row) > 0)
-		{
-	?>		<div align="center"><input type="submit" name="submit" value="Update"></div>		
-	<?php	
-		}		
-	?>
+	<div align="center"><input type="submit" name="submit" value="Update"></div>		
 	<br><br>  
 </body>
 </html>

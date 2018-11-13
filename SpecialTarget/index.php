@@ -37,8 +37,6 @@ a{
 	
 	<a href="special_target_date.php" class="btn lg ghost">INSERT SPECIAL TARGET DATE</a>
     <br><br><br>	
-	
-	</div>
 
 </div>
 </body>

@@ -10,7 +10,7 @@ if(isset($_SESSION["user_name"]))
 		$fromDate = $_GET['fromDate'];
 		$toDate = $_GET['toDate'];				
 
-		$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE isActive = 1 ORDER BY name asc") or die(mysqli_error($con)) or die(mysqli_error($con));		 						
+		$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE isActive = 1 AND type LIKE '%AR%' ORDER BY name asc") or die(mysqli_error($con)) or die(mysqli_error($con));		 						
 		
 		if(count($_POST) > 0)
 		{
@@ -23,7 +23,6 @@ if(isset($_SESSION["user_name"]))
 				}
 
 			}
-			$lock = mysqli_query($con, "INSERT INTO special_target_locker (from_date,to_date,locked) VALUES ('$fromDate','$toDate',1)") or die(mysqli_error($con));		 											
 			header("Location:../index.php");
 		}	
 	}

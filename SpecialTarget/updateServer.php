@@ -19,9 +19,6 @@ if(isset($_SESSION["user_name"]))
 			$result = mysqli_query($con, $sql) or die(mysqli_error($con));				   
 		}
 	}
-
-	$lockAR ="UPDATE special_target_locker SET locked = 1 WHERE  from_Date = '$fromDate' AND to_Date = '$toDate' ";
-	$LockARresult = mysqli_query($con, $lockAR) or die(mysqli_error($con));				   	
 	
 	header( "Location: ../index.php" );
 
