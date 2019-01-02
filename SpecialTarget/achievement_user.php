@@ -33,7 +33,9 @@ if(isset($_SESSION["user_name"]))
 	}
 	else
 	{
-		$year = (int)date("Y");	
+		$sql = mysqli_query($con,"SELECT YEAR(from_date) FROM special_target_date ORDER BY from_date DESC LIMIT 1") or die(mysqli_error($con));	
+		$row = mysqli_fetch_array($sql,MYSQLI_ASSOC);
+		$year = (int)$row['YEAR(from_date)'];
 
 		$monthList = getMonths($year);		
 		$month = end($monthList);
