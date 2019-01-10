@@ -9,7 +9,7 @@ a{
 }
 </style>
 <head>
-<title>HOME</title>
+<title>Party</title>
 <link rel="stylesheet" type="text/css" href="css/index.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -29,23 +29,14 @@ a{
 
 	<div class="row">
 	
-	<a href="sales/todayList.php?ar=all" class="btn lg ghost">TODAY SALES</a>
+	<a href="ar/list.php" class="btn lg ghost">AR</a>
     <br><br><br>
 
-	<a href="sales/list.php" class="btn lg ghost">ALL SALES</a>
+	<a href="engineers/list.php" class="btn lg ghost">ENGINEERS</a>
     <br><br><br><br>
-		
-	<a href="reports/totalSalesAR.php" class="btn lg ghost">SALES SUMMARY</a>
-    <br><br><br>
 	
-   	<a href="Target/" class="btn lg ghost">TARGET</a>
-    <br><br><br>	
-	
-   	<a href="SpecialTarget/" class="btn lg ghost">SPECIAL TARGET</a>
-    <br><br><br>		
-	
-   	<a href="indexParty.php" class="btn lg ghost">PARTY</a>
-    <br><br><br>			
+	<a href="redemption/" class="btn lg ghost">POINT REDEMPTION</a>
+    <br><br><br><br>	
 
 	</div>
 </body>
