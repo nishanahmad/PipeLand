@@ -13,4 +13,14 @@ function getTargetMap($arIds,$startYear)
 
 	return $targetMap;
 }
+
+/*
+$arMap = array();
+$arMap[] = 23;
+$arMap[] = 24;
+
+$arIds = implode("','",array_keys($arMap));
+
+var_dump(getTargetMap($arIds,2018));
+*/
 ?>	
