@@ -131,8 +131,7 @@ function getOpeningPoints($year,$arId,$isActive)
 	}
 	else if($year > 2018)
 	{
-		$i = $year-1;
-		while($i >= 2018)
+		while($year >= 2018)
 		{
 			$targetMap = getTargets($year,$arId);
 			$specialTargetMap = getSpecialTargets($year,$arId);
@@ -157,7 +156,21 @@ function getOpeningPoints($year,$arId,$isActive)
 				}		
 			}			
 			
-			$i--;
+			foreach($specialTargetMap as $month => $subArray)
+			{
+				foreach($subArray as $dateString => $value)
+				{
+					if($value['sale'] + $value['extra'] >= $value['target'])
+						$opening = $opening + $value['sale'];					
+				}
+			}			
+			
+			foreach($redemptionMap as $redemption)
+			{
+				$opening = $opening - $redemption['points'];
+			}
+			
+			$year--;
 		}
 	}
 			
