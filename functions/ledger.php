@@ -161,17 +161,35 @@ function getOpeningPoints($year,$arId,$isActive)
 				foreach($subArray as $dateString => $value)
 				{
 					if($value['sale'] + $value['extra'] >= $value['target'])
+					{
 						$opening = $opening + $value['sale'];					
+					}
 				}
 			}			
 			
-			foreach($redemptionMap as $redemption)
+			foreach($redemptionMap as $subArray)
 			{
-				$opening = $opening - $redemption['points'];
+				foreach($subArray as $index => $redemption)
+				{
+					$opening = $opening - $redemption['points'];
+				}
+					
 			}
-			
 			$year--;
 		}
+
+		// GET REDEMPTION FROM 2017 TO BALANCE OUT OPENING POINTS
+		$redemptionMap = getRedemptions(2017,$arId);
+		{
+			foreach($redemptionMap as $subArray)
+			{
+				foreach($subArray as $index => $redemption)
+				{
+					$opening = $opening - $redemption['points'];
+				}
+					
+			}		
+		}		
 	}
 			
 	return $opening;
