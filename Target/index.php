@@ -2,11 +2,15 @@
 session_start();
 if(isset($_SESSION["user_name"]))
 {
-	$year = date("Y");
-	$month = date("m");
-	echo $year;
-	echo $month;	
-?>
+	require '../connect.php';
+	
+	$yearQuery = mysqli_query($con,"SELECT MAX(year) FROM target")  or die(mysqli_error($con));
+	$yearObj = mysqli_fetch_array($yearQuery,MYSQLI_ASSOC);
+	$year = $yearObj['MAX(year)'];	
+	
+	$monthQuery = mysqli_query($con,"SELECT MAX(month) FROM target WHERE year = $year ")  or die(mysqli_error($con));
+	$monthObj = mysqli_fetch_array($monthQuery,MYSQLI_ASSOC);
+	$month = $monthObj['MAX(month)'];?>
 
 <html>
 <head>
@@ -39,13 +43,22 @@ a{
 	<a href="generateDateSelectPage.php" class="btn lg ghost">GENERATE TARGET & RATE</a>
 	<br><br><br>
 
-	<a href="monthlyPoints.php?month=<?php echo $month;?>&year=<?php echo $year;?>" class="btn lg ghost">VIEW MONTHLY POINTS</a>
+	<a href="monthlyPoints.php?month=<?php echo $month;?>&year=<?php echo $year;?>" class="btn lg ghost">MONTHLY POINTS AR</a>
 	<br><br><br>
 	
-	<a href="../points_full/mainPage.php?month=<?php echo $month;?>&year=<?php echo $year;?>&dateString=FULL" class="btn lg ghost">VIEW ACCUMULATED POINTS</a>
+	<a href="../points_full/mainPage.php?month=<?php echo $month;?>&year=<?php echo $year;?>&dateString=FULL" class="btn lg ghost">ACCUMULATED POINTS AR</a>
+	<br><br><br>
+
+	<a href="../targetBags/" class="btn lg ghost">TARGET BAGS</a>
 	<br><br><br>	
 	
-	<a href="companyTarget.php?month=<?php echo $month;?>&year=<?php echo $year;?>" class="btn lg ghost">COMPANY TARGET</a>
+	<a href="../engineers/points.php?" class="btn lg ghost">ENGINEER POINTS</a>
+	<br><br><br>		
+	
+	<a href="../engineers/smsPoints.php?" class="btn lg ghost">ENGINEER SMS</a>
+	<br><br><br>			
+	
+	<a href="companyTarget.php?month=<?php echo $month;?>&year=<?php echo $year;?>" class="btn lg ghost">COMPANY TARGET AR</a>
 	<br><br><br>	
 
 </div>

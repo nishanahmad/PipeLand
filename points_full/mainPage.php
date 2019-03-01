@@ -51,7 +51,14 @@ if(isset($_SESSION["user_name"]))
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];
-			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+			$targetBagsQuery = mysqli_query($con,"SELECT SUM(qty) FROM targetbags WHERE '$year' = year(`date`) AND '$month' = month(`date`) AND ar_id = $arId") or die(mysqli_error($con));
+			$row=mysqli_fetch_array($targetBagsQuery,MYSQLI_ASSOC);
+			if($row['SUM(qty)'] == null)
+				$targetBags = 0;
+			else
+				$targetBags = $row['SUM(qty)'];			
+
+			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'] + $targetBags;
 			if(isset($targetMap[$arId]))
 			{
 				$points = round($total * $targetMap[$arId]['rate'],0);
