@@ -60,11 +60,11 @@ if(isset($_SESSION["user_name"]))
 		else
 			$targetBags = $row['SUM(qty)'];
 
-		$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'] + $targetBags;
+		$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
 		if(isset($targetMap[$arId]))
 		{
 			$points = round($total * $targetMap[$arId]['rate'],0);
-			$actual_perc = round($total * 100 / $targetMap[$arId]['target'],0);
+			$actual_perc = round(($total + $targetBags) * 100 / $targetMap[$arId]['target'],0);
 			$point_perc = getPointPercentage($actual_perc,$year,$month);			 
 			$achieved_points = round($points * $point_perc/100,0);
 			
