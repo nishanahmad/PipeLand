@@ -6,6 +6,7 @@ if(isset($_SESSION["user_name"]))
 	require '../functions/monthMap.php';
 	require '../functions/targetFormula.php';
 	require 'getTargetMap.php';
+	require 'getTargetExtrasMap.php';
 	require 'getSaleMap.php';
 	require 'getSpecialTargetMap.php';	
 	require '../SpecialTarget/dropDownGenerator.php';
@@ -307,6 +308,7 @@ function getPrevPoints($arList,$endYear,$endMonth,$dateString)
 	//call targetMap and saleMap from helper functions 
 	
 	$targetMap = getTargetMap($arIds,$startYear);		// arId => year => month => target
+	$targetExtrasMap = getTargetExtrasMap($arIds,$startYear);		// arId => year => month => targetExtraBags
 	$saleMap = getSaleMap($arIds,$startYear,$endYear);	    // arId => year => month = sale
 
 	// Add points based on monthly targets
@@ -324,9 +326,16 @@ function getPrevPoints($arList,$endYear,$endMonth,$dateString)
 							$sale = $saleMap[$arId][$year][$month];
 						else
 							$sale = 0;
+						
+						if(isset($targetExtrasMap[$arId][$year][$month]))
+							$targetExtras = $targetExtrasMap[$arId][$year][$month];
+						else
+							$targetExtras = 0;						
+						
+						
 
 						$points = round($sale * $detailArray['rate'],0);
-						$actual_perc = round($sale * 100 / $detailArray['target'],0);
+						$actual_perc = round(($sale + $targetExtras)* 100 / $detailArray['target'],0);
 						$point_perc = getPointPercentage($actual_perc,$year,$month);			
 						$achieved_points = round($points * $point_perc/100,0);
 						
