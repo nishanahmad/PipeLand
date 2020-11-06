@@ -18,11 +18,12 @@ function getMonths($year)
 {
 	require '../connect.php';
 
-	$sql = mysqli_query($con,"SELECT MONTH(from_date) FROM special_target_date WHERE  YEAR(from_date) = '$year' ORDER BY from_date ASC") or die(mysqli_error($con));		 
+	$sql = mysqli_query($con,"SELECT MONTH(from_date) FROM special_target_date WHERE  YEAR(from_date) = '$year' ORDER BY from_date ASC") or die(mysqli_error($con));	
 	foreach($sql as $row)
 	{
 		$monthList[] = (int)$row['MONTH(from_date)'];
-	}
+	}		
+	
 	$monthList = array_unique($monthList);					
 	
 	return($monthList);

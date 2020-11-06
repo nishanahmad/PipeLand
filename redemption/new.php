@@ -3,9 +3,10 @@ session_start();
 if(isset($_SESSION["user_name"]))
 {
 	require '../connect.php';
+	require '../navbar.php';
     
 // Populate maps for SAP CODE and SHOP NAME
-	$arObjects = mysqli_query($con,"SELECT id,name,sap_code,shop_name FROM ar_details");
+	$arObjects = mysqli_query($con,"SELECT id,name,sap_code,shop_name FROM ar_details ORDER BY name");
 	foreach($arObjects as $arObject)
 	{
 		$arId = $arObject['id'];
@@ -21,15 +22,16 @@ if(isset($_SESSION["user_name"]))
 
 <!DOCTYPE html>
 <head>
-	<title>Redeem Points</title>
-	<link href='../css/bootstrap.min.css' rel='stylesheet' type='text/css'>
-	<link href='../css/pointsForm.css' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" type="text/css" href="../css/jquery-ui.css"> 
-	<link rel="stylesheet" type="text/css" href="../css/toast.css">	
-
-	<script src='../js/jquery.js' type='text/javascript'></script>
-	<script src='//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0/js/bootstrap.min.js' type='text/javascript'></script>
-	<script type="text/javascript" language="javascript" src="../js/jquery-ui.min.js"></script>	  
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
+	<link href="../css/styles.css" rel="stylesheet" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" ></script>
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>	
+	<title>Redemption</title>
 	<script>
 	
 	var shopNameList = '<?php echo $shopNameArray;?>';

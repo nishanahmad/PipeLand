@@ -1,124 +1,265 @@
+<!DOCTYPE html>
 <?php
 session_start();
 if(isset($_SESSION["user_name"]))
 {
-?>	
-<!DOCTYPE html>
+	require '../connect.php';
+	require 'listHelper.php';
+	require '../navbar.php';
+	require 'newModal.php';
+	require 'rateModal.php';
+	require 'filterModal.php';
+
+	$currentRateMap = getCurrentRates($con);
+	$clientNamesMap = getClientNames($con);
+	$productDetailsMap = getProductDetails($con);
+	$discountMap = getDiscounts($con);
+	$truckNumbersMap = getTruckNumbers($con);
+	
+	$filterSql = null;
+	if(isset($_GET['sql']))
+		$filterSql = $_GET['sql'];
+	
+	if(isset($_GET['range']))
+		$range = $_GET['range'];
+	else
+		$range = 'Custom Filter';
+
+	$mainMap = array();
+	if(isset($filterSql))
+	{
+		$productSumMap = getProductSum($con,$filterSql);
+		$mainMap = getSales($con,$filterSql);
+	}
+
+	$rateMap = getRateMap();
+	$cdMap = getCDMap();
+	$wdMap = getWDMap();
+	
+	$productDates = mysqli_query($con, "SELECT * FROM rate ORDER BY date") or die(mysqli_error($con));				 	 
+	foreach($productDates as $rate)
+		$productDateMap[$rate['product']][] = strtotime($rate['date']);
+
+	$arObjects = mysqli_query($con,"SELECT id,name,type,shop_name FROM ar_details ORDER BY name") or die(mysqli_error($con));	
+	foreach($arObjects as $ar)
+	{
+		if($ar['type'] != 'Engineer Only')
+			$arMap[$ar['id']] = $ar['name']; 
+		if($ar['type'] == 'Engineer' || $ar['type'] == 'Contractor' || $ar['type'] == 'Engineer Only')
+			$engMap[$ar['id']] = $ar['name'];
+		
+		$shopName = strip_tags($ar['shop_name']); 
+		$shopNameMap[$ar['id']] = $shopName;
+
+		$shopNameArray = json_encode($shopNameMap);
+		$shopNameArray = str_replace('\n',' ',$shopNameArray);
+		$shopNameArray = str_replace('\r',' ',$shopNameArray);		
+	};																																				?>	
+	
 <html>
-	<title>Sales List</title>
 	<head>
-	<style>
-.dataTables_wrapper .dt-buttons {
-  float:none;  
-  text-align:center;
-}
-	</style>	
-		<link rel="stylesheet" type="text/css" href="../css/glow_box.css">
-		<link rel="stylesheet" type="text/css" href="../css/jquery.dataTables.css">
-		<link rel="stylesheet" type="text/css" href="../css/fixedHeader.css">
-		<link rel="stylesheet" type="text/css" href="../css/buttons.css">
-
-		<script type="text/javascript" language="javascript" src="../js/jquery.js"></script>
-		<script type="text/javascript" language="javascript" src="../js/jquery.dataTables.js"></script>
-		<script type="text/javascript" language="javascript" src="../js/fixedHeader.js"></script>
-		<script type="text/javascript" language="javascript" src="../js/buttons.js"></script>
-		<script type="text/javascript" language="javascript" src="../js/html5ExportButton.js"></script>
-		<script type="text/javascript" language="javascript" src="../js/colVis.js"></script>	
-		<script type="text/javascript" language="javascript" src="../js/jsZip.js"></script>		
-		<script type="text/javascript" language="javascript">
-			$(document).ready(function() {
-				var dataTable = $('#sales-table').DataTable( {
-					dom: 'lfBrtip',
-					buttons: ['excelHtml5','colvis'],									
-					"processing": true,
-					"serverSide": true,
-					"responsive": true,
-					"bJQueryUI":true,
-					"iDisplayLength": 2000,		
-					"ajax":{
-						url :"list_server.php", // json datasource
-						type: "post",  // method  , by default get
-						error: function(){  // error handling
-							$(".sales-table-error").html("");
-							$("#sales-table").append('<tbody class="sales-table-error"><tr><th colspan="3">No data found in the server</th></tr></tbody>');
-							$("#sales-table_processing").css("display","none");
-										}
-						   }
-				} );
-				
-   dataTable.on( 'xhr', function () {
-    var json = dataTable.ajax.json();
-    $('.srp').html(json.srp);
-	$('.srh').html(json.srh);
-	$('.f2r').html(json.f2r);
-	$('.total').html(json.srp + json.srh + json.f2r);
-	$('.sql').html(json.sql);
-} );				
-				
-				
-				$("#employee-grid_filter").css("display","none");  // hiding global search box
-				$('.search-input-text').on( 'keyup click', function () {   // for text boxes
-					var i =$(this).attr('data-column');  // getting column index
-					var v =$(this).val();  // getting search input value
-					dataTable.columns(i).search(v).draw();
-				} );
-				$('.search-input-select').on( 'change', function () {   // for select box
-					var i =$(this).attr('data-column');  
-					var v =$(this).val();  
-					dataTable.columns(i).search(v).draw();
-				} );
-				
-			} );
-		</script>
-
+		<meta name="viewport" content="width=device-width, initial-scale=1">	
+		<link href="../css/styles.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" media="screen and (max-device-width: 768px)" href="../css/neomorphism.css"/>
+		<link href="../css/navbarMobile.css" media="screen and (max-device-width: 768px)" rel="stylesheet" type="text/css">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.9.1/jquery.tablesorter.min.js" integrity="sha512-mWSVYmb/NacNAK7kGkdlVNE4OZbJsSUw8LiJSgGOxkb4chglRnVfqrukfVd9Q2EOWxFp4NfbqE3nDQMxszCCvw==" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.9.1/jquery.tablesorter.widgets.min.js" integrity="sha512-6I1SQyeeo+eLGJ9aSsU43lGT+w5HYY375ev/uIghqqVgmSPSDzl9cqiQC4HD6g8Ltqz/ms1kcf0takjBfOlnig==" crossorigin="anonymous"></script>
+		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet"/>
+		<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+		<title>Sales</title>
+		<style>
+			.select2-selection__rendered {
+				line-height: 33px !important;
+			}
+			.select2-container .select2-selection--single {
+				height: 38px !important;
+			}
+			.select2-selection__arrow {
+				height: 37px !important;
+			}
+			#line{
+			   display:block;
+			   width:220px;
+			   border-top: 1px solid #D3D3D3;
+			   margin-top:5px;
+			   margin-bottom:5px;
+			}			
+		</style>			
 	</head>
 	<body>
-		<div align="center">
-					<a href="../index.php" class="link"><img alt='home' title='home' src='../images/home.png' width='60px' height='60px'/> </a> &nbsp;&nbsp;&nbsp;
-					<a href="new.php" class="link"><img alt='Add' title='Add New' src='../images/addnew.png' width='60px' height='60px'/></a
-		
-		</div>
-<div align="center" class="gradient">
-<font size=5>
-<br>
-<!--SQL:<span class='sql'></span><br><br-->
-SRP:<span class='srp'></span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-SRH :<span class='srh'></span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-F2R : <span class='f2r'></span><br><br>
-<b>TOTAL : <span class='total'></span>
-</b></font>
-		<br><br>
-			<input type="text" data-column="1"  class="search-input-text textarea" placeholder="Date">&nbsp&nbsp
-			<input type="text" data-column="2"  class="search-input-text textarea" placeholder="AR">&nbsp&nbsp
-			<input type="text" data-column="3"  class="search-input-text textarea" placeholder="Truck">&nbsp&nbsp
-			<input type="text" data-column="4" style="width:50px" class="search-input-text textarea" placeholder="srp">&nbsp&nbsp
-			<input type="text" data-column="5" style="width:50px" class="search-input-text textarea" placeholder="srh">&nbsp&nbsp
-			<input type="text" data-column="6" style="width:50px" class="search-input-text textarea" placeholder="f2r">&nbsp&nbsp
-			<input type="text" data-column="8"  class="search-input-text textarea" placeholder="Customer">&nbsp&nbsp
-			<input type="text" data-column="9"  class="search-input-text textarea" placeholder="Engineer">&nbsp&nbsp
-			<input type="text" data-column="10"  class="search-input-text textarea" placeholder="Remarks">
-
-		<br><br>
-			<table id="sales-table" class="display cell-border no-wrap" >
+		<nav class="navbar navbar-light bg-light sticky-top bottom-nav">
+			<div class="btn-group" role="group" style="float:left;margin-left:2%;">
+				<div class="btn-group" role="group">
+					<button id="btnGroupDrop1" type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+						<i class="far fa-calendar-alt"></i> <?php echo $range;?>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="cursor:pointer">									
+						<li id="todayFilter"><a class="dropdown-item">Today</a></li>							
+						<li id="10DaysFilter"><a class="dropdown-item">10 Days</a></li>
+						<li id="customFilter" class="dropdown-item">Custom Filter</a></li>				
+					</ul>
+				</div>
+			</div>					
+			<span class="navbar-brand" style="font-size:25px;"><i class="fa fa-bolt"></i> Sales</span>
+			<a href="#" class="btn btn-sm" role="button" style="background-color:#54698D;color:white;float:right;margin-right:3%;" data-toggle="modal" data-target="#saleModal"><i class="fa fa-bolt"></i> New Sale</a>			
+		</nav>
+		<div style="width:100%;" class="mainbody">	
+			<div id="snackbar"><i class="fa fa-bolt"></i>&nbsp;&nbsp;Sale detail saved successfully !!!</div>
+			<div align="center">
+				<br/><br/>
+				<table class="ratetable table table-hover table-bordered" <?php if($range == 'Today') echo 'style="width:35%;"'; else echo 'style="width:20%;"';?> id="ratetable">
 					<thead>
-						<tr>
-							<th>Id</th>
-							<th style="width:90px !important">Date</th>
-							<th style="width:200px !important">AR</th>
-							<th>Truck</th>
-							<th>SRP</th>
-							<th>SRH</th>
-							<th>F2R</th>							
-							<th>BILL NO</th>							
-							<th>CSTMR NAME</th>							
-							<th>Engineer</th>							
-							<th>REMARKS</th>							
+						<tr class="table-info">
+							<th><i class="fa fa-shield"></i> Product</th>
+							<th style="width:90px;"><i class="fab fa-buffer"></i> Qty</th>															<?php 
+							if($range == 'Today')
+							{																														?>
+								<th style="width:90px;"><i class="fa fa-rupee-sign"></i> Rate</th>
+								<th style="width:110px;"><i class="fa fa-tags"></i> Discount</th>													<?php
+							}																														?>
 						</tr>
 					</thead>
-			</table>
+					<tbody id="ratebody"><?php				
+						foreach($currentRateMap as $product=>$rate)
+						{
+							if(isset($productSumMap[$product]))
+							{																														?>
+								<tr>
+									<td><?php echo $productDetailsMap[$product]['name'];?></td>
+									<td><?php echo $productSumMap[$product];?></td><?php 
+									if($range == 'Today')
+									{																												?>
+										<td><?php echo $rate.'/-';?></td>
+										<td><?php if(isset($discountMap[$product])) echo $discountMap[$product].'/-';?></td>						<?php
+									}																												?>	
+								</tr>																												<?php
+							}	
+						}																															?>
+					</tbody>																														<?php 
+					if($range == 'Today')
+					{																																?>
+						<tfoot id="ratefoot">
+							<tr>
+								<td colspan="4" style="text-align:center"><a href="#" class="link-success" data-toggle="modal" data-target="#rateModal">All Product Rates</a></td>
+							</tr>			
+						</tfoot>																														<?php
+					}																																?>
+				</table>
+			</div>
+			<div id="content-desktop">
+				<br/><br/>
+				<table class="maintable table table-hover table-bordered" style="width:95%;margin-left:2%;">
+					<thead>
+						<tr class="table-success">
+							<th style="width:110px;"><i class="far fa-calendar-alt"></i> Date</th>
+							<th><i class="fa fa-address-card-o"></i> AR</th>
+							<th style="width:70px;"><i class="fa fa-shield"></i> PRO</th>
+							<th style="width:70px;"><i class="fab fa-buffer"></i> QTY</th>
+							<th style="width:70px;"><i class="fa fa-rupee-sign"></i> RATE</th>
+							<th style="width:120px;"><i class="far fa-file-alt"></i> BILL NO</th>
+							<th style="width:95px;"><i class="fas fa-truck-moving"></i> TRUCK</th>
+							<th style="width:180px;"><i class="far fa-user"></i> CUSTOMER</th>
+							<th><i class="far fa-comment-dots"></i> REMARKS</th>
+							<th><i class="fas fa-map-marker-alt"></i> ADDRESS</th>
+						</tr>	
+					</thead>
+					<tbody>	<?php
+						foreach($mainMap as $index => $sale) 
+						{
+							$date = $productDateMap[$sale['product']][closestDate($productDateMap[$sale['product']],strtotime($sale['date']))];
+							$date = date('Y-m-d',$date);
+							
+							if(isset($rateMap[$sale['product']][$date]))
+								$rate = $rateMap[$sale['product']][$date];
+							else
+								$rate = 0;
+							
+							if(isset($cdMap[$sale['product']][$sale['client']][$sale['date']]))
+								$cd = $cdMap[$sale['product']][$sale['client']][$sale['date']];
+							else
+								$cd = 0;
+							
+							if(isset($wdMap[$sale['product']][$sale['date']]))
+								$wd = $wdMap[$sale['product']][$sale['date']];
+							else
+								$wd = 0;
+							
+							$finalRate = $rate - $cd - $wd - $sale['discount'];																					?>	
+							
+							<tr data-id="<?php echo $sale['id'];?>" data-params="<?php echo explode('?',$_SERVER['REQUEST_URI'])[1];?>" class="saleId" style="cursor:pointer;">
+								<td><?php echo date('d-m-Y',strtotime($sale['date'])); ?></td>
+								<td><?php echo $clientNamesMap[$sale['client']]; ?></td>
+								<td><?php echo $productDetailsMap[$sale['product']]['name'];?></td>
+								<td><?php echo $sale['qty']; ?></td>
+								<td><?php if($finalRate > 0 ) echo $finalRate.'/-';?></td>							
+								<td><?php echo $sale['bill']; ?></td>
+								<td><?php echo $sale['truck_no']; ?></td>
+								<td><?php echo $sale['name'].'<br/><font>'.$sale['phone'].'</font>'; ?></td>
+								<td><?php echo $sale['remarks']; ?></td>
+								<td><?php echo $sale['address']; ?></td>
+							</tr>																																		<?php				
+						}																																				?>
+					</tbody>	
+				</table>
+			</div>
+
+			<div id="content-mobile">
+				<div class="container">
+					<div class="app-container"><?php
+						foreach($mainMap as $index => $sale) 
+						{
+							$date = $productDateMap[$sale['product']][closestDate($productDateMap[$sale['product']],strtotime($sale['date']))];
+							$date = date('Y-m-d',$date);
+							
+							if(isset($rateMap[$sale['product']][$date]))
+								$rate = $rateMap[$sale['product']][$date];
+							else
+								$rate = 0;
+							
+							if(isset($cdMap[$sale['product']][$sale['client']][$sale['date']]))
+								$cd = $cdMap[$sale['product']][$sale['client']][$sale['date']];
+							else
+								$cd = 0;
+							
+							if(isset($wdMap[$sale['product']][$sale['date']]))
+								$wd = $wdMap[$sale['product']][$sale['date']];
+							else
+								$wd = 0;
+							
+							$finalRate = $rate - $cd - $wd - $sale['discount'];																					?>	
+							
+							<div class="app-content">
+								<button class="button button-large">
+									<div class="subtle">
+										<font style="color:#077dfe;">&nbsp;<?php echo $clientNamesMap[$sale['client']]; ?></font><br/>
+										<span id="line"></span>
+										<i class="far fa-calendar-alt"></i>&nbsp;<?php echo date('d-m-Y',strtotime($sale['date'])); ?><br/>										
+										<font style="color:<?php echo $productDetailsMap[$sale['product']]['colorcode'];?>"><i class="fa fa-shield"></i>&nbsp;<?php echo $productDetailsMap[$sale['product']]['name'];?></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@&nbsp;&nbsp;<i class="fa fa-rupee-sign"></i><?php if($finalRate > 0 ) echo $finalRate.'/-';?><br/>
+										<i class="fab fa-buffer"></i>&nbsp;<?php echo $sale['qty']; ?><br/>
+										<i class="fas fa-house-user"></i>&nbsp;<?php echo $sale['name']; ?><div class="button button-small saleId" data-id="<?php echo $sale['id'];?>" data-params="<?php echo explode('?',$_SERVER['REQUEST_URI'])[1];?>" style="float:right;margin-right:2%;"><i class="fas fa-chevron-right"></i></div><br/>
+									</div>
+								</button>
+								<br/>
+							</div>																															<?php
+						}																																	?>
+					</div>
+				</div>
+			</div>			
+			<br/><br/><br/>
 		</div>
+		<script src="list.js"></script>
+		<script src="newModal.js"></script>
+		<script>	
+			var shopNameList = '<?php echo $shopNameArray;?>';
+			var shopName_array = JSON.parse(shopNameList);
+			var shopNameArray = shopName_array;											
+		</script>
 	</body>
-</html>																				<?php
+</html>																																					<?php
 }
 else
-	header("Location:../index.php");
+	header("Location:../index/home.php");																													?>

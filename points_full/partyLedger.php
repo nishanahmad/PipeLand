@@ -39,11 +39,11 @@ if(isset($_SESSION["user_name"]))
 			$targetMap[$target['ar_id']]['payment_perc'] = $target['payment_perc'];
 		}
 		
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];
-			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+			$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 			if(isset($targetMap[$arId]))
 			{
 				$points = round($total * $targetMap[$arId]['rate'],0);
@@ -80,10 +80,10 @@ if(isset($_SESSION["user_name"]))
 			$arId = $specialTarget['ar_id'];
 			$start = $specialTarget['fromDate'];
 			$end = $specialTarget['toDate'];
-			$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
+			$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
 			foreach($sales as $sale)
 			{
-				$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+				$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 				$totalWithExtra = $total;
 				$extraBags = mysqli_query($con,"SELECT ar_id,SUM(qty) FROM extra_bags WHERE date >= '$start' AND date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
 				foreach($extraBags as $extraBag)
@@ -320,11 +320,11 @@ function getPrevPoints($arList,$endYear,$endMonth,$dateString)
 	{
 		$start = $stDate['from_date'];
 		$end = $stDate['to_date'];
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];
-			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+			$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 			$totalWithExtra = $total;
 			$extraBags = mysqli_query($con,"SELECT ar_id,SUM(qty) FROM extra_bags WHERE date >= '$start' AND date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
 			foreach($extraBags as $extraBag)

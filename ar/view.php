@@ -21,11 +21,12 @@ if(isset($_SESSION["user_name"]))
 	
 	$targetMap = getTargets($urlYear,$urlId);
 	$specialTargetMap = getSpecialTargets($urlYear,$urlId);
+	$boosterMap = getBoosters($urlYear);
 	$redemptionMap = getRedemptions($urlYear,$urlId);
 	$saleMap = getSales($urlYear,$urlId);
 	$pointsMap = getPoints($urlYear,$saleMap,$isActive,$targetMap);
-	$openingPoints = getOpeningPoints($urlYear,$urlId,$isActive);	
-?>
+	$openingPoints = getOpeningPoints($urlYear,$urlId,$isActive);																									?>
+	
 <html>
 	<head>
 		<title><?php echo $ar['name'];?></title>
@@ -81,23 +82,23 @@ if(isset($_SESSION["user_name"]))
 							<td>: <?php echo $ar['mobile'];?></td>
 						  </tr>							  
 						  <tr>
-							<td><i class="fa fa-home"></i> Shop Name</td>
+							<td><i class="fa fa-home"></i> Shop</td>
 							<td>: <?php echo $ar['shop_name'];?></td>
 						  </tr>
 						  <tr>
-							<td>SAP Code</td>
+							<td> SAP Code</td>
 							<td>: <?php echo $ar['sap_code'];?></td>
 						  </tr>					  
 						  <tr>
-							<td>Area</td>
+							<td><i class="fa fa-map-marker"></i> Area</td>
 							<td>: <?php echo $ar['area'];?></td>
 						  </tr>					  
 						  <tr>
-							<td>Type</td>
+							<td><i class="fa fa-cog"></i> Type</td>
 							<td>: <?php echo $ar['type'];?></td>
 						  </tr>					  					  
 						  <tr>
-							<td>Status</td>																								<?php
+							<td><i class="fa fa-bars"></i> Status</td>																								<?php
 							if($ar['isActive'])
 							{																											?>
 								<td>: Active</td>																				<?php
@@ -113,8 +114,15 @@ if(isset($_SESSION["user_name"]))
 				  <div class="col-md-4">
 					<br/><br/>
 					<a  href="edit.php?id=<?php echo $ar['id'];?>" class="btn btn-theme" style="width:120px"><i class="fa fa-pencil"></i> Edit AR</a>
-					<br/><br/>
-					<a type="submit" class="btn btn-danger" id="delete" style="width:120px"><i class="fa fa-times"></i> Deactivate</a>	
+					<br/><br/><?php
+					if($ar['isActive'])
+					{																											?>
+						<a type="submit" class="btn btn-danger" id="deActivate" style="width:120px"><i class="fa fa-times"></i> Deactivate</a><?php
+					}
+					else
+					{																											?>
+						<a type="submit" class="btn btn-success" id="activate" style="width:120px"><i class="fa fa-check"></i> Activate</a>																				<?php
+					}																											?>					
 				  </div>
 				</div>
 			</div>
@@ -166,13 +174,32 @@ if(isset($_SESSION["user_name"]))
 												<td><?php echo $subArray['target'];?></td>
 												<td><?php echo $subArray['sale'];?></td>
 												<td><?php 
-													if($subArray['sale'] + $subArray['extra'] >= $subArray['target']) 
+													$actual_percentage = round(  $subArray['sale'] * 100 / $subArray['target'],0);							
+													if(isset($boosterMap[$month][$dateString]['achieved'])) 
 													{
-														$openingPoints = $openingPoints + $subArray['sale'];
-														echo $subArray['sale'];
-													}	
-													else 
-														echo '0';?>
+														if($actual_percentage >= (float)$boosterMap[$month][$dateString]['achieved'] )
+														{
+															$openingPoints = $openingPoints + $subArray['sale']  + round($subArray['sale'] * $boosterMap[$month][$dateString]['boost']/100);
+															echo $subArray['sale'] + round($subArray['sale'] * $boosterMap[$month][$dateString]['boost']/100);
+														}
+															
+														else if($subArray['sale'] + $subArray['extra'] >= $subArray['target'])
+														{
+															$openingPoints = $openingPoints + $subArray['sale'];					
+															echo $subArray['sale'];														
+														}
+														else
+															echo '0';
+															
+														
+													}
+													else if($subArray['sale'] + $subArray['extra'] >= $subArray['target'])
+													{
+														$openingPoints = $openingPoints + $subArray['sale'];				
+														echo $subArray['sale'];														
+													}
+													else
+														echo '0';																									?>
 												</td>
 												<td></td>
 											</tr>																												<?php			

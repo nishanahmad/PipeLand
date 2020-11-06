@@ -33,9 +33,9 @@ function getSpecialTargets($year,$arId)
 		$dateString = date('d',strtotime($target['fromDate'])). ' to ' .date('d',strtotime($target['toDate']));
 		$specialTargetMap[$month][$dateString]['target'] = $target['special_target'];
 		
-		$sql = mysqli_query($con, "SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$from' AND entry_date <= '$to' AND ar_id = '$arId'" ) or die(mysqli_error($con));
+		$sql = mysqli_query($con, "SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$from' AND entry_date <= '$to' AND ar_id = '$arId'" ) or die(mysqli_error($con));
 		$sale = mysqli_fetch_array($sql,MYSQLI_ASSOC);
-		$specialTargetMap[$month][$dateString]['sale'] = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+		$specialTargetMap[$month][$dateString]['sale'] = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 		
 		$sql = mysqli_query($con, "SELECT SUM(qty) FROM extra_bags WHERE date >= '$from' AND date <= '$to' AND ar_id = '$arId'" ) or die(mysqli_error($con));
 		$extraBags = mysqli_fetch_array($sql,MYSQLI_ASSOC);		
@@ -43,6 +43,25 @@ function getSpecialTargets($year,$arId)
 	}	
 	
 	return $specialTargetMap;
+}	
+
+function getBoosters($year)
+{
+	require '../connect.php';
+	
+	$boosterMap = array();
+	$boosterObjects = mysqli_query($con,"SELECT * FROM special_target_booster WHERE YEAR(fromDate)='$year' ORDER BY fromDate") or die(mysqli_error($con));		 
+	foreach($boosterObjects as $booster)
+	{
+		$month = (int)date("m",strtotime($booster['fromDate']));
+		$from = date("Y-m-d",strtotime($booster['fromDate']));
+		$to = date("Y-m-d",strtotime($booster['toDate']));
+		$dateString = date('d',strtotime($booster['fromDate'])). ' to ' .date('d',strtotime($booster['toDate']));
+		$boosterMap[$month][$dateString]['achieved'] = $booster['ifAchieved'];
+		$boosterMap[$month][$dateString]['boost'] = $booster['boost'];
+	}	
+	
+	return $boosterMap;
 }	
 
 
@@ -67,10 +86,10 @@ function getSales($year,$arId)
 	require '../connect.php';
 	
 	$saleMap = array();	
-	$salesList = mysqli_query($con, "SELECT SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag),MONTH(entry_date) FROM nas_sale WHERE YEAR(entry_date) = '$year' AND ar_id = '$arId' GROUP BY MONTH(entry_date) ORDER BY MONTH(entry_date) ASC" ) or die(mysqli_error($con));
+	$salesList = mysqli_query($con, "SELECT SUM(qty),SUM(return_bag),MONTH(entry_date) FROM nas_sale WHERE YEAR(entry_date) = '$year' AND ar_id = '$arId' GROUP BY MONTH(entry_date) ORDER BY MONTH(entry_date) ASC" ) or die(mysqli_error($con));
 	foreach($salesList as $sale) 
 	{
-		$saleMap[$sale['MONTH(entry_date)']] = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+		$saleMap[$sale['MONTH(entry_date)']] = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 	}
 			
 	return $saleMap;
@@ -145,6 +164,7 @@ function getOpeningPoints($year,$arId,$isActive)
 			{
 				$targetMap = getTargets($year-1,$arId);
 				$specialTargetMap = getSpecialTargets($year-1,$arId);
+				$boosterMap = getBoosters($year-1);
 				$redemptionMap = getRedemptions($year-1,$arId);
 				$saleMap = getSales($year-1,$arId);
 				
@@ -170,10 +190,17 @@ function getOpeningPoints($year,$arId,$isActive)
 				{
 					foreach($subArray as $dateString => $value)
 					{
-						if($value['sale'] + $value['extra'] >= $value['target'])
+						$actual_percentage = round(  $value['sale'] * 100 / $value['target'],0);							
+						if(isset($boosterMap[$month][$dateString]['achieved'])) 
 						{
-							$opening = $opening + $value['sale'];					
+							if($actual_percentage >= (float)$boosterMap[$month][$dateString]['achieved'] )
+								$opening = $opening + $value['sale']  + round($value['sale'] * $boosterMap[$month][$dateString]['boost']/100);
+							else if($value['sale'] + $value['extra'] >= $value['target'])
+								$opening = $opening + $value['sale'];					
+							
 						}
+						else if($value['sale'] + $value['extra'] >= $value['target'])
+							$opening = $opening + $value['sale'];					
 					}
 				}			
 				
@@ -186,7 +213,6 @@ function getOpeningPoints($year,$arId,$isActive)
 						
 				}				
 			}
-
 			$year--;
 		}
 	}

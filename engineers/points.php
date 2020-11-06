@@ -4,6 +4,7 @@ if(isset($_SESSION["user_name"]))
 {
 	require '../connect.php';
 	require '../functions/monthMap.php';
+	require '../navbar.php';
 	
 	$mainArray = array();
 	if(isset($_GET['year']) && isset($_GET['month']))
@@ -17,13 +18,13 @@ if(isset($_SESSION["user_name"]))
 		$urlMonth = (int)date("m");
 	}
 	
-	$engObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,sap_code FROM ar_details WHERE type LIKE '%Engineer%' AND isActive = 1 ORDER BY name ASC ") or die(mysqli_error($con));		 
+	$engObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,bag_report FROM ar_details WHERE type LIKE '%Engineer%' AND isActive = 1 ORDER BY name ASC ") or die(mysqli_error($con));
 	foreach($engObjects as $eng)
 	{
 		$engMap[$eng['id']]['name'] = $eng['name'];
 		$engMap[$eng['id']]['mobile'] = $eng['mobile'];
 		$engMap[$eng['id']]['shop'] = $eng['shop_name'];
-		$engMap[$eng['id']]['sap'] = $eng['sap_code'];
+		$engMap[$eng['id']]['bag_report'] = $eng['bag_report'];
 	}				
 	
 	$prevMap = getPrevPoints(array_keys($engMap),$urlYear,$urlMonth);
@@ -32,21 +33,32 @@ if(isset($_SESSION["user_name"]))
 	
 	$engIds = implode("','",array_keys($engMap));
 	
-	$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con));	
+	$sales = mysqli_query($con,"SELECT ar_id,product,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND ar_id IN ('$engIds') GROUP BY ar_id,product") or die(mysqli_error($con));	
 	foreach($sales as $sale)
 	{
 		$engId = $sale['ar_id'];
 		
-		$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
-		$pointMap[$engId]['points'] = $total;
+		if($sale['product'] == 4)
+			$total = ($sale['SUM(qty)'] - $sale['SUM(return_bag)'])*3;
+		else
+			$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];		
+		
+		if(isset($pointMap[$engId]['points']))
+			$pointMap[$engId]['points'] = $pointMap[$engId]['points'] + $total;
+		else
+			$pointMap[$engId]['points'] = $total;
 	}			
 	
-	$sales = mysqli_query($con,"SELECT eng_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con));	
+	$sales = mysqli_query($con,"SELECT eng_id,product,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND eng_id IN ('$engIds') GROUP BY eng_id,product") or die(mysqli_error($con));	
 	foreach($sales as $sale)
 	{
 		$engId = $sale['eng_id'];
 		
-		$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+		if($sale['product'] == 4)
+			$total = ($sale['SUM(qty)'] - $sale['SUM(return_bag)'])*3;
+		else
+			$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];		
+		
 		if(isset($pointMap[$engId]['points']))
 			$pointMap[$engId]['points'] = $pointMap[$engId]['points'] + $total;
 		else
@@ -61,89 +73,63 @@ if(isset($_SESSION["user_name"]))
 ?>
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="../css/loader.css">	
-<link rel="stylesheet" type="text/css" href="../css/responstable.css">
-<link rel="stylesheet" type="text/css" href="../css/glow_box.css">
-<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
-<script type="text/javascript" language="javascript" src="../js/jquery.js"></script>
-<script type="text/javascript" language="javascript" src="../js/jquery.floatThead.min.js"></script>
-<script src="../js/fileSaver.js"></script>
-<script src="../js/tableExport.js"></script>
-<script type="text/javascript" language="javascript">
-$(document).ready(function() {
-	$("#loader").hide();
- 	$("#button").click(function(){
-		$("table").tableExport({
-				formats: ["xls"],    // (String[]), filetypes for the export
-				bootstrap: false,
-				ignoreCSS: ".ignore"   // (selector, selector[]), selector(s) to exclude from the exported file
-		});
-	});		
-	var $table = $('.responstable');
-	$table.floatThead();				
-} );
-function rerender()
-{
-	var year = document.getElementById("jsYear").options[document.getElementById("jsYear").selectedIndex].value;
-	var month=document.getElementById("jsMonth").value;
-	var hrf = window.location.href;
-	hrf = hrf.slice(0,hrf.indexOf("?"));
-	$("#main").hide();
-	$("#loader").show();
-	window.location.href = hrf +"?year="+ year + "&month=" + month;
-}
-</script>
-
 <title><?php echo getMonth($urlMonth); echo " "; echo $urlYear; ?></title>
+<link href="../css/styles.css" rel="stylesheet" type="text/css">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js"></script>
 </head>
 <body>
-	<div id="loader" class="loader" align="center" style="background : #161616 url('../images/pattern_40.gif') top left repeat;height:100%">
-		<br><br><br><br><br><br><br><br><br><br><br><br>
-		<div class="circle"></div>
-		<div class="circle1"></div>
-		<br>
-		<font style="color:white;font-weight:bold">Calculating ......</font>
-	</div>
+<div class="main">
+	<nav class="navbar navbar-light bg-light sticky-top bottom-nav">
+		<span class="navbar-brand" style="font-size:25px;margin-left:45%;"><i class="fa fa-hard-hat"></i> Engineers</span>
+	</nav>
 	<div align="center">
-		<a href="../index.php" class="link"><img alt='home' title='home' src='../images/home.png' width='50px' height='50px'/> </a>
 		<br><br>
-		<select id="jsMonth" name="jsMonth" class="textarea" onchange="return rerender();">																								<?php	
-			$monthList = mysqli_query($con, "SELECT DISTINCT month FROM target ORDER BY month ASC" ) or die(mysqli_error($con));	
-			foreach($monthList as $month) 
-			{	
-	?>			<option <?php if($urlMonth == (int)$month['month']) echo 'selected';?> value="<?php echo $month['month'];?>"><?php echo getMonth($month['month']);?></option>															<?php	
-			}
-	?>	</select>					
-			&nbsp;&nbsp;
-
-		<select id="jsYear" name="jsYear" class="textarea" onchange="return rerender();">																				<?php	
-			$yearList = mysqli_query($con, "SELECT DISTINCT year FROM target ORDER BY year DESC") or die(mysqli_error($con));	
-			foreach($yearList as $year) 
-			{
-?>				<option <?php if($urlYear == (int)$year['year']) echo 'selected';?> value="<?php echo $year['year'];?>"><?php echo $year['year'];?></option>																			<?php	
-			}
-?>		</select>
-
-		<br><br>
-		
-		<img src="../images/excel.png" id="button" height="50px" width="45px" />
+		<div class="form-group row">
+			<div style="width:200px;margin-left:40%">
+				<div class="input-group mb-3">
+						<select id="jsMonth" name="jsMonth" class="form-control col-md-4" onchange="return rerender();">																								<?php	
+							$monthList = mysqli_query($con, "SELECT DISTINCT month FROM target ORDER BY month ASC" ) or die(mysqli_error($con));	
+							foreach($monthList as $month) 
+							{																																											?>			
+								<option <?php if($urlMonth == (int)$month['month']) echo 'selected';?> value="<?php echo $month['month'];?>"><?php echo getMonth($month['month']);?></option>															<?php	
+							}																																											?>	
+						</select>					
+				</div>
+			</div>
+			<div style="width:150px">
+				<div class="input-group mb-3">
+					<select id="jsYear" name="jsYear" class="form-control" onchange="return rerender();">																				<?php	
+						$yearList = mysqli_query($con, "SELECT DISTINCT year FROM target ORDER BY year DESC") or die(mysqli_error($con));	
+						foreach($yearList as $year) 
+						{																																								?>
+							<option <?php if($urlYear == (int)$year['year']) echo 'selected';?> value="<?php echo $year['year'];?>"><?php echo $year['year'];?></option>																			<?php	
+						}																																								?>		
+					</select>
+				</div>
+			</div>
+		</div>
 		<br/><br/>
-
-		<table id="Points" class="responstable" style="width:70% !important">
+		<table class="maintable table table-hover table-bordered" style="width:70%;margin-left:40px;">
 		<thead>
-			<tr>
-				<th style="width:20%;text-align:left;">AR</th>
+			<tr class="table-success">
+				<th style="width:20%;text-align:left;">Engineer</th>
 				<th style="width:12%;">Mobile</th>
 				<th style="width:25%;text-align:left;">Shop</th>
-				<th style="width:10%;">SAP</th>
+				<th style="width:10%;">ReportedTo</th>
 				<th>Opng Pnts</th>
 				<th>Current Pnts</th>	
 				<th>Redeemed Pnts</th>	
 				<th>Balance</th>	
 			</tr>
-		</thead>	
-							
-																																												<?php
+		</thead>
+		<tbody>																																						<?php
+			$openingTotal = 0;
+			$currentTotal = 0;
+			$redeemedTotal = 0;
+			$balanceTotal = 0;																																												
 			foreach($engMap as $arId => $detailMap)
 			{		
 				if(!isset($targetMap[$arId]))
@@ -155,19 +141,54 @@ function rerender()
 				
 				
 				<tr align="center">
-				<td style="text-align:left;"><?php echo $detailMap['name'];?></b></td>
-				<td><?php echo $detailMap['mobile'];?></b></td>
-				<td style="text-align:left;"><?php echo $detailMap['shop'];?></b></td>
-				<td><?php echo $detailMap['sap'];?></b></td>
-				<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];?></b></td>
-				<td><?php echo $pointMap[$arId]['points'];?></td>
-				<td><?php echo $redemptionMap[$arId];?></td>
-				<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];?></td>
+					<td style="text-align:left;"><?php echo $detailMap['name'];?></b></td>
+					<td><?php echo $detailMap['mobile'];?></b></td>
+					<td style="text-align:left;"><?php echo $detailMap['shop'];?></b></td>
+					<td><?php echo $detailMap['bag_report'];?></b></td>
+					<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];?></b></td>
+					<td><?php echo $pointMap[$arId]['points'];?></td>
+					<td><?php echo $redemptionMap[$arId];?></td>
+					<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];?></td>
 				</tr>																																							<?php
+				$openingTotal = $openingTotal + $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];
+				$currentTotal = $currentTotal + $pointMap[$arId]['points'];
+				$redeemedTotal = $redeemedTotal + $redemptionMap[$arId];
+				$balanceTotal = $balanceTotal + $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];			
 			}																																									?>
+			</tbody>
+			<tfoot>
+				<tr>
+					<th style="width:20%;text-align:left;"></th>
+					<th style="width:12%;"></th>
+					<th style="width:25%;text-align:left;"></th>
+					<th style="width:10%;"></th>
+					<th><?php echo $openingTotal;?></th>
+					<th><?php echo $currentTotal;?></th>	
+					<th><?php echo $redeemedTotal;?></th>	
+					<th><?php echo $balanceTotal;?></th>	
+				</tr>
+			</tfoot>																															
 		</table>
 		<br/><br/><br/><br/>
 	</div>
+</div>
+	<script type="text/javascript" language="javascript">
+	$(document).ready(function() {
+		$(".maintable").tablesorter({
+			theme : 'bootstrap',
+			widgets: ['filter'],
+			filter_columnAnyMatch: true
+		}); 
+	} );
+	function rerender()
+	{
+		var year = document.getElementById("jsYear").options[document.getElementById("jsYear").selectedIndex].value;
+		var month=document.getElementById("jsMonth").value;
+		var hrf = window.location.href;
+		hrf = hrf.slice(0,hrf.indexOf("?"));
+		window.location.href = hrf +"?year="+ year + "&month=" + month;
+	}
+	</script>	
 </body>
 </html>																																											<?php
 }
@@ -180,6 +201,7 @@ function getPrevPoints($engList,$endYear,$endMonth)
 	require '../connect.php';
 	
 	$startDate = date("Y-m-d",strtotime('2018-04-01'));
+	$urlEndMonth = $endMonth;
 	
 	foreach($engList as $engId)
 	{
@@ -202,26 +224,32 @@ function getPrevPoints($engList,$endYear,$endMonth)
 		
 		$engIds = implode("','",array_keys($engMap));	
 		
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND ar_id IN ('$engIds') GROUP BY ar_id" ) or die(mysqli_error($con));		 	 
+		$sales = mysqli_query($con,"SELECT ar_id,product,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND ar_id IN ('$engIds') GROUP BY ar_id,product" ) or die(mysqli_error($con));		 	 
 		foreach($sales as $sale)
 		{
 			$engId = $sale['ar_id'];				
 			
-			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+			if($sale['product'] == 4)
+				$total = ($sale['SUM(qty)'] - $sale['SUM(return_bag)'])*3;
+			else
+				$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];		
+		
 			$engMap[$engId]['prevPoints'] = $engMap[$engId]['prevPoints'] + $total;	
 		}
-		$sales = mysqli_query($con,"SELECT eng_id,SUM(srp),SUM(srh),SUM(f2r),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND eng_id IN ('$engIds') GROUP BY eng_id" ) or die(mysqli_error($con));		 	 
+		$sales = mysqli_query($con,"SELECT eng_id,product,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND eng_id IN ('$engIds') GROUP BY eng_id,product" ) or die(mysqli_error($con));		 	 
 		foreach($sales as $sale)
 		{
 			$engId = $sale['eng_id'];				
 			
-			$total = $sale['SUM(srp)'] + $sale['SUM(srh)'] + $sale['SUM(f2r)'] - $sale['SUM(return_bag)'];
+			if($sale['product'] == 4)
+				$total = ($sale['SUM(qty)'] - $sale['SUM(return_bag)'])*3;
+			else
+				$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];		
+			
 			$engMap[$engId]['prevPoints'] = $engMap[$engId]['prevPoints'] + $total;	
 		}		
 		
-		
-		$redMonth = $endMonth - 1;
-		$redemptionList = mysqli_query($con,"SELECT ar_id,SUM(points) FROM redemption WHERE  ( (YEAR(date) = '$endYear' AND MONTH(date) < '$redMonth') OR (YEAR(date) < '$endYear')) AND ar_id IN('$engIds') GROUP BY ar_id") or die(mysqli_error($con));		 	
+		$redemptionList = mysqli_query($con,"SELECT ar_id,SUM(points) FROM redemption WHERE  ( (YEAR(date) = '$endYear' AND MONTH(date) <= '$endMonth') OR (YEAR(date) < '$endYear')) AND ar_id IN('$engIds') GROUP BY ar_id") or die(mysqli_error($con));		 	
 		foreach($redemptionList as $redemption)
 		{
 			$engMap[$redemption['ar_id']]['prevRedemption'] = $engMap[$redemption['ar_id']]['prevRedemption'] + $redemption['SUM(points)'];			

@@ -3,27 +3,55 @@ session_start();
 if(isset($_SESSION["user_name"]))
 {
 	require '../connect.php';
+	require '../navbar.php';
 	
 	if($_POST)
 	{
 		$fromDate = date("Y-m-d", strtotime($_POST["from"]));
 		$toDate = date("Y-m-d", strtotime($_POST["to"]));
 		
-		$query = mysqli_query($con,"INSERT INTO special_target_date (from_date,to_date) VALUES ('$fromDate','$toDate') ") or die(mysqli_error($con));		 						
+		$query = mysqli_query($con,"INSERT INTO special_target_date (from_date,to_date) VALUES ('$fromDate','$toDate') ") or die(mysqli_error($con));
 		
-		header("Location:insertNewList.php?fromDate=$fromDate&toDate=$toDate");
+		$URL='insertNewList.php?fromDate='.$fromDate.'&toDate='.$toDate;
+		echo "<script type='text/javascript'>document.location.href='{$URL}';</script>";
+		echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $URL . '">';
 	}
 ?>
-
-<html>
-<head >
-<link rel="stylesheet" type="text/css" href="../css/reportpage.css" />
-<meta charset="utf-8">
-<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
-<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
-<link rel="stylesheet" href="../resources/demos/style.css">
-<script type="text/javascript" src="../js/jQuery.min.js"></script>
+<head>
+	<link href="../css/styles.css" rel="stylesheet" type="text/css">	
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+</head>
+<body>
+	<div id="main" class="main">
+		<aside class="sidebar">
+			<nav class="nav">
+				<ul>
+					<li><a href="../ar/list.php">List</a></li>
+					<li><a href="../Target/monthlyPoints.php">Monthly Points</a></li>
+					<li><a href="#">Total Points</a></li>
+					<li class="active"><a href="#">Special Target</a></li>
+				</ul>
+			</nav>
+		</aside>
+		<div class="container">		
+			<nav class="navbar navbar-light bg-light sticky-top bottom-nav" style="margin-left:12%;width:100%">
+				<span class="navbar-brand" style="font-size:25px;margin-left:40%;"><i class="fa fa-chart-pie"></i> Insert Date Range</span>
+			</nav>			
+			<br/><br/>
+			<div align="center">
+			<form name="frm" method="post" action="" style="margin-left:20%">
+				<input type="text" id="datepicker" name="from" required  class="form-control" style="width:150px;" placeholder="From Date" autocomplete="off"/>
+				<br/>
+				<input type="text" id="datepicker2" name="to" required  class="form-control" style="width:150px;" placeholder="To date" autocomplete="off"/>
+				<br/>
+				<input type="submit" name="submit" class="btn btn-success" value="Insert" onclick="return confirm('Do you want to insert new special target range?')">
+			</form>
+			</div>
+		</div>
+	</div>
+</body>
 <script>
 $(function() {
 
@@ -34,42 +62,7 @@ $( "#datepicker2" ).datepicker(pickerOpts);
 
 
 });
-</script>
-
-</head>
- 
-<body>
-<div class="background" align = "center">
-<a href="../index.php" class="link"><img alt='home' title='home' src='../images/homeSilver.png' width='100px' height='100px'/> </a>
-<br><br><br><br><br>
-<form name="frm" method="post" action="">
-
-<table border="0" cellpadding="1" cellspacing="10" width="25%" align="center">
-<tr>
-<td><b><font color="#989898">FROM :</font></b></td>
-<b></b>
-<td>
-<input type="text" id="datepicker" name="from" required  size="20" placeholder="From Date"/>
-</td>
-</tr>
-<tr></tr><tr></tr>
-<tr> 
-<td><b><font color="#989898">TO :</font></b></td>
-<b></b>
-<td>
-<input type="text" id="datepicker2" name="to" required  size="20" placeholder="To date"/>
-</td>
-</tr>
-<tr></tr><tr></tr><tr></tr>
-<tr>
-<td colspan="2"><div align="center"><input type="submit" name="submit" value="Insert Range" onclick="return confirm('Do you want to insert new special target range?')"></div></td>
-</tr>
-</table>
-</form>
-</div>
-</div>
-</body>
-</html>																							<?php
+</script>																							<?php
 }
 else
 	header("Location:../index.php");

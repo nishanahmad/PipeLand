@@ -51,23 +51,6 @@ function arRefresh()
 	$('#sapCode').text(sapCode);
 }								
 </script>
-<script>
-function validateForm() 
-{
-    var srp = parseInt(document.forms["frmUser"]["srp"].value);
-    var srh = parseInt(document.forms["frmUser"]["srh"].value);
-    var f2r = parseInt(document.forms["frmUser"]["f2r"].value);
-
-	
-	if ( !srp && !srh && !f2r )
-	{
-        alert("Please enter a value in atleast one of these fields : srp,srh,F2R");
-        return false;
-    }
-	
-	
-}
-</script>
 <meta charset="utf-8">
 <link rel="stylesheet" type="text/css" href="../css/jquery-ui.css">
 <link rel="stylesheet" type="text/css" href="../css/companySale.css" />
