@@ -309,7 +309,7 @@ a {
 		</div>		
 	</div>
 	<div class="mobile-bottom-nav__item">
-		<div class="mobile-bottom-nav__item-content" onclick="javascript:location.href='../reports/salesSummary.php'">
+		<div class="mobile-bottom-nav__item-content" onclick="javascript:location.href='https://menu.kannurzone.com/home.php'">
 			<i class="fas fa-th-large"></i>
 			Apps
 		</div>		
