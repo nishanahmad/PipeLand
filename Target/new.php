@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <?php
@@ -50,6 +51,7 @@ if(isset($_SESSION["user_name"]))
 					<li><a href="../ar/list.php">AR List</a></li>
 					<li class="active"><a href="#">Target</a></li>
 					<li><a href="../SpecialTarget/list.php?">Special Target</a></li>
+					<li><a href="../redemption/list.php?">Redemption</a></li>
 				</ul>
 			</nav>
 		</aside>
@@ -58,10 +60,10 @@ if(isset($_SESSION["user_name"]))
 				<div class="btn-group" role="group" aria-label="Button group with nested dropdown" style="float:left;margin-left:2%;">
 					<div class="btn-group" role="group">
 						<button id="btnGroupDrop1" type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-							Update Target
+							Generate Target
 						</button>
 						<ul class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="cursor:pointer">
-							<li><a href="monthlyPointsList.php?" class="dropdown-item">Monthly Points</a></li>
+							<li><a href="list.php?" class="dropdown-item">Monthly Points</a></li>
 							<li><a href="../points_full/mainPage.php?" class="dropdown-item">Accumulated Points</a></li>
 						</ul>
 					</div>

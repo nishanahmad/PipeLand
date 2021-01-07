@@ -9,11 +9,8 @@ if(isset($_SESSION["user_name"]))
 	$month = (int)$_POST['month'];
 	$year = (int)$_POST['year'];	
 	
-	var_dump($month);
-	var_dump($year);
-	
 	foreach($_POST as $key => $value)
-	{
+	{	
 		$arr = explode("-",$key);
 		$arId = (int)str_replace('_',' ',$arr[0]);
 		
@@ -21,7 +18,7 @@ if(isset($_SESSION["user_name"]))
 		{
 			if($arr[1] == 'target')
 			{
-				$sql="UPDATE target SET target = '$value' WHERE ar_id = '$arId' AND month = '$month' AND year = '$year' ";
+				$sql="INSERT INTO target (target,ar_id,month,year,rate,payment_perc) VALUES ('$value','$arId','$month','$year',0,100)";
 				$result = mysqli_query($con, $sql) or die(mysqli_error($con));				   
 			}
 			else if($arr[1] == 'rate')	
@@ -37,7 +34,7 @@ if(isset($_SESSION["user_name"]))
 		}
 	}
 	
-	header( "Location: index.php" );
+	header( "Location: list.php?" );
 
 	mysqli_close($con); 
 }

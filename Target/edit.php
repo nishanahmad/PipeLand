@@ -43,7 +43,7 @@ if(isset($_SESSION["user_name"]))
 	}
 		
 		
-	$arObjects = mysqli_query($con, "SELECT * FROM ar_details WHERE isActive = 1 AND Type LIKE '%AR%' ORDER BY name ASC") or die(mysqli_error($con));
+	$arObjects = mysqli_query($con, "SELECT * FROM ar_details WHERE Type LIKE '%AR%' ORDER BY name ASC") or die(mysqli_error($con));
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']] = $ar['name'];
@@ -90,6 +90,7 @@ function rerender()
 					<li><a href="../ar/list.php">AR List</a></li>
 					<li class="active"><a href="#">Target</a></li>
 					<li><a href="../SpecialTarget/list.php?">Special Target</a></li>
+					<li><a href="../redemption/list.php?">Redemption</a></li>
 				</ul>
 			</nav>
 		</aside>
@@ -101,7 +102,7 @@ function rerender()
 							Update Target
 						</button>
 						<ul class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="cursor:pointer">
-							<li><a href="monthlyPointsList.php?" class="dropdown-item">Monthly Points</a></li>
+							<li><a href="list.php?" class="dropdown-item">Monthly Points</a></li>
 							<li><a href="../points_full/mainPage.php?" class="dropdown-item">Accumulated Points</a></li>
 						</ul>
 					</div>
@@ -111,10 +112,10 @@ function rerender()
 			</nav>
 			<div id="snackbar"><i class="fa fa-chart-pie"></i>&nbsp;&nbsp;Target generated succesfully !!!</div>
 			<br/><br/>
-			<div class="row" style="margin-left:50%">
-				<div style="width:100px;">
+			<div class="row" style="margin-left:48%">
+				<div style="width:120px;">
 					<div class="input-group">
-						<select id="jsYear" name="jsYear" class="form-control" onchange="return rerender();">																				<?php
+						<select id="jsYear" name="jsYear" class="form-select" onchange="return rerender();">																				<?php
 						foreach($yearList as $yearIterator)
 						{																																			?>
 							<option  <?php if($yearIterator == $year) echo 'selected';?> value="<?php echo $yearIterator;?>"> <?php echo $yearIterator;?> </option>															<?php 
@@ -124,7 +125,7 @@ function rerender()
 				</div>				
 				<div style="width:150px;">
 					<div class="input-group">
-						<select id="jsMonth" name="jsMonth" class="form-control" onchange="return rerender();">																				<?php
+						<select id="jsMonth" name="jsMonth" class="form-select" onchange="return rerender();">																				<?php
 							$monthObjects = mysqli_query($con,"SELECT DISTINCT month FROM target WHERE year = $year ORDER BY month ASC");	
 							foreach($monthObjects as $mnth)
 							{
@@ -136,10 +137,10 @@ function rerender()
 				</div>
 			</div>	
 			<br/><br/>			
-			<form name="arBulkUpdate" method="post" action="updateServer.php">
+			<form name="arBulkUpdate" method="post" action="update.php">
 				<table class="table table-hover table-bordered offset-2" style="margin-left:25%;width:70%">
 					<thead>
-						<tr class="table-success">
+						<tr style="background-color:#F2CF5B">
 							<th style="width:20%">AR NAME</th>
 							<th style="width:30%">SHOP</th>
 							<th style="width:30%">MOBILE</th>
