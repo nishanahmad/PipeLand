@@ -52,11 +52,12 @@ if(isset($_SESSION["user_name"]))
 	$zeroTargetIds = implode("','",array_keys($zeroTargetMap));	
 	
 	$arMap = array();
-	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,sap_code FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ORDER BY name ASC ") or die(mysqli_error($con));		 
+	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,whatsapp,shop_name,sap_code FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ORDER BY name ASC ") or die(mysqli_error($con));		 
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']]['name'] = $ar['name'];
 		$arMap[$ar['id']]['mobile'] = $ar['mobile'];
+		$arMap[$ar['id']]['whatsapp'] = $ar['whatsapp'];
 		$arMap[$ar['id']]['shop'] = $ar['shop_name'];
 		$arMap[$ar['id']]['sap'] = $ar['sap_code'];
 	}				
@@ -73,7 +74,7 @@ if(isset($_SESSION["user_name"]))
 	
 
 
-	$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+	$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 
 	$mainArray = array();
 	foreach($sales as $sale)
@@ -98,7 +99,8 @@ if(isset($_SESSION["user_name"]))
 				$payment_points = round($achieved_points * $targetMap[$arId]['payment_perc']/100,0);
 			else
 				$payment_points = 0;			
-
+			
+			$mainArray[$arId]['target'] = $targetMap[$arId]['target'];
 			$mainArray[$arId]['actual_sale'] = $total;
 			$mainArray[$arId]['targetBags'] = $targetBags;
 			$mainArray[$arId]['points'] = $points;
@@ -106,8 +108,16 @@ if(isset($_SESSION["user_name"]))
 			$mainArray[$arId]['point_perc'] = $point_perc;
 			$mainArray[$arId]['achieved_points'] = $achieved_points;
 			$mainArray[$arId]['payment_points'] = $payment_points;			
+			$mainArray[$arId]['whatsapp'] = $arMap[$arId]['whatsapp'];		
+			$mainArray[$arId]['month'] = $month;
+			$mainArray[$arId]['year'] = $year;
 		}
 	}	
+	
+	$whatsapp_status = true;
+	$whatsappQuery =  mysqli_query($con,"SELECT * FROM whatsapp_status WHERE type = 'target' AND year = $year AND month = $month") or die(mysqli_error($con));
+	foreach($whatsappQuery as $status)
+		$whatsapp_status = false;
 ?>
 <html>
 <head>
@@ -126,7 +136,7 @@ if(isset($_SESSION["user_name"]))
 $(document).ready(function() {
 	
 	$(".maintable tr").each(function(){
-		var extra = $(this).find("td:eq(5)").text();   
+		var extra = $(this).find("td:eq(7)").text();   
 		if (extra != '0' && extra != ''){
 		  $(this).addClass('selected');
 		}
@@ -140,6 +150,12 @@ $(document).ready(function() {
 	}); 
 	
 	var $table = $('.maintable');
+	
+	if(window.location.href.includes('success')){
+		var x = document.getElementById("snackbar");
+		x.className = "show";
+		setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);	
+	}	
 } );
 
 
@@ -173,6 +189,7 @@ function rerender()
 			</nav>
 		</aside>
 		<div class="container">
+			<div id="snackbar"><i class="fa fa-whatsapp" aria-hidden="true"></i>&nbsp;&nbsp;Message sent successfully !!!</div>
 			<nav class="navbar navbar-light bg-light sticky-top bottom-nav" style="margin-left:12.5%;width:100%">
 				<div class="btn-group" role="group" aria-label="Button group with nested dropdown" style="float:left;margin-left:2%;">
 					<div class="btn-group" role="group">
@@ -194,7 +211,7 @@ function rerender()
 				<div style="width:120px;margin-left:48%">
 					<div class="input-group">
 						<select id="jsYear" name="jsYear" class="form-select" style="width:200px;" onchange="return rerender();">																				<?php	
-							$yearList = mysqli_query($con, "SELECT DISTINCT year FROM target ORDER BY year DESC") or die(mysqli_error($con));	
+							$yearList = mysqli_query($con, "SELECT DISTINCT year FROM target ORDER BY year DESC") or die(mysqli_error($con));
 							foreach($yearList as $yearObj) 
 							{																																	  ?>				
 								<option value="<?php echo $yearObj['year'];?>" <?php if($yearObj['year'] == $year) echo 'selected';?>><?php echo $yearObj['year'];?></option>											<?php	
@@ -213,7 +230,26 @@ function rerender()
 							}																																?>
 						</select>
 					</div>
-				</div>
+				</div>																																		<?php
+				if($whatsapp_status)
+				{																																			?>
+					<div style="width:150px;">
+						<div class="input-group" title="Dear AR, Ur {X} Month Target is {X} Bags. Achieve Ur Target & Earn Full Lakshya Benefits - AR HELP">
+							<form method="post" action="whatsapp_target.php">
+								<input type='hidden' name='input_name' value="<?php echo htmlentities(serialize($mainArray)); ?>" />
+								<button id="whatapp" class="btn" style="width:100px;font-size:18px;background-color:#44C052;color:#F7F7F7" onclick="return confirm('This will send message on whatsapp. Are you sure you want to proceed?')"><i class="fa fa-whatsapp" aria-hidden="true"></i> Target</button>
+							</form>
+						</div>
+					</div>																																	<?php
+				}																																			?>
+				<div style="width:200px;">
+					<div class="input-group" title="DEAR AR, YOUR BALANCE TO ACHIEVE YOUR MONTHLY TARGET OF {MONTH YEAR} IS {X} BAGS. ACHIEVE YOUR TARGET & EARN SPECIAL BENEFITS - AR HELP">
+						<form method="post" action="whatsapp_reamining_bags.php">
+							<input type='hidden' name='input_name' value="<?php echo htmlentities(serialize($mainArray)); ?>" />
+							<button id="whatapp" class="btn" style="width:180px;font-size:18px;background-color:#44C052;color:#F7F7F7" onclick="return confirm('This will send message on whatsapp. Are you sure you want to proceed?')"><i class="fa fa-whatsapp" aria-hidden="true"></i> Remaining Bags</button>
+						</form>
+					</div>
+				</div>																																					
 			</div>	
 			<br/><br/>
 			<table class="maintable table table-hover table-bordered ui-table-reflow" style="width:92%;margin-left:15%;">
@@ -221,7 +257,9 @@ function rerender()
 				<tr class="table-success">
 					<th style="text-align:left;">AR</th>
 					<th>Mobile</th>
+					<th>Whatsapp</th>
 					<th style="text-align:left;width:20%">Shop</th>
+					<th>SAP</th>
 					<th>Target</th>
 					<th>Sale</th>
 					<th>Extra</th>
@@ -261,7 +299,9 @@ function rerender()
 					<tr align="center">
 						<td style="text-align:left;"><?php echo $arMap[$arId]['name'];?></b></td>
 						<td><?php echo $arMap[$arId]['mobile'];?></b></td>
+						<td><?php echo $arMap[$arId]['whatsapp'];?></b></td>
 						<td style="text-align:left;"><?php echo $arMap[$arId]['shop'];?></b></td>
+						<td><?php echo $arMap[$arId]['sap'];?></b></td>
 						<td><?php echo $target;?></td>
 						<td><?php echo $mainArray[$arId]['actual_sale'];?></td>
 						<td><?php echo $mainArray[$arId]['targetBags'];?></td>
@@ -278,6 +318,7 @@ function rerender()
 						<th><!-- AR --></th>
 						<th><!-- MOBILE --></th>
 						<th><!-- SHOP --></th>
+						<th><!-- SAP --></th>
 						<th><?php echo $totalTarget;?></th>
 						<th><?php echo $totalSale;?></th>
 						<th><!-- EXTRA BAGS --></th>
@@ -287,7 +328,7 @@ function rerender()
 						<th></th>	
 						<th></th>
 						<th><?php echo $totalPaymentPoints;?></th>
-					</tr>	
+					</tr>
 				</tfoot>	
 			</table>
 		</div>

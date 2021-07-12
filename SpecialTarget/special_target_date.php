@@ -28,10 +28,10 @@ if(isset($_SESSION["user_name"]))
 		<aside class="sidebar">
 			<nav class="nav">
 				<ul>
-					<li><a href="../ar/list.php">List</a></li>
-					<li><a href="../Target/monthlyPoints.php">Monthly Points</a></li>
-					<li><a href="#">Total Points</a></li>
+					<li><a href="../ar/list.php">AR List</a></li>
+					<li><a href="../Target/list.php?">Target</a></li>
 					<li class="active"><a href="#">Special Target</a></li>
+					<li><a href="../redemption/list.php?">Redemption</a></li>
 				</ul>
 			</nav>
 		</aside>
