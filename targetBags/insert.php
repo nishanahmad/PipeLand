@@ -21,7 +21,7 @@ if(isset($_SESSION["user_name"]))
 
 	$result = mysqli_query($con, $sql) or die(mysqli_error($con));				 
 
-	header( "Location: new.php" );
+	header( "Location: list.php" );
 
 	mysqli_close($con);
 }
