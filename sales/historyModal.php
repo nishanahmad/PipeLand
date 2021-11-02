@@ -4,8 +4,7 @@ error_reporting(E_ALL);
 
 require '../connect.php';
 if(isset($_SESSION["user_name"]))
-{			
-	$historyList = (getHistory($row['sales_id']));	?>	
+{																																										?>	
 	
 	<style>
 		.ratetable td{

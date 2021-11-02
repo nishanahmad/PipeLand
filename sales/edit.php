@@ -6,9 +6,8 @@ if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 {
 	require '../connect.php';
 	require 'getHistory.php';
-	require 'sheetModal.php';
 	require 'rateBreakDownModal.php';
-	require 'holdingModal.php';
+//	require 'holdingModal.php';
 	require 'historyModal.php';
 	require 'newTruckModal.php';
 	require 'deleteModal.php';
@@ -43,18 +42,7 @@ if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 		$URL='list.php?sql='.$_POST['sql1'].'&range='.$_POST['range1'];
 		echo "<script type='text/javascript'>document.location.href='{$URL}';</script>";
 		echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $URL . '">';		
-	}																																							
-
-	$blockDateQuery = mysqli_query($con,"SELECT date FROM block_old_sale") or die(mysqli_error($con));
-	$blockDate = mysqli_fetch_array($blockDateQuery,MYSQLI_ASSOC)['date'];
-	$blockDate = date('Y-m-d',strtotime($blockDate));																																											
-	
-	$holdings = mysqli_query($con,"SELECT * FROM holdings WHERE returned_sale =".$row['sales_id']." OR cleared_sale =".$row['sales_id']) or die(mysqli_error($con));
-	
-	$unlocked = true;
-	$lockedQuery = mysqli_query($con,"SELECT * FROM lock_sale WHERE sale =".$row['sales_id']) or die(mysqli_error($con));
-	if(mysqli_num_rows($lockedQuery) > 0)
-		$unlocked = false;																																								?>
+	}																																							?>
 	
 	
 	<html>
@@ -88,33 +76,11 @@ if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 				</form>
 			</div>
 			<span class="navbar-brand" style="font-size:25px;margin-left:10%;"><i class="fa fa-bolt"></i> Sale</span>
-				<div style="float:right;margin-right:20px;"><?php
-					if($row['deleted'] == null)
-					{
-						if(isset($sheet))
-						{																																						?>
-							<button type="button" class="btn" id="sheetMdlBtn" style="background-color:#F2CF5B;color:white;" data-toggle="modal" data-target="#sheetModal">
-								<i class="far fa-edit"></i>&nbsp;&nbsp;Sheet
-							</button>&nbsp;&nbsp;																																			<?php
-						}
-						else
-						{																																						?>
-							<button type="button" class="btn" id="sheetMdlBtn" style="background-color:#7dc37d;color:white;" data-toggle="modal" data-target="#sheetModal">
-								<i class="fas fa-plus"></i>&nbsp;&nbsp;Sheet
-							</button>																																			<?php
-						}																																												
-					}																																					?>
-					&nbsp;
+				<div style="float:right;margin-right:20px;">
 					<div style="float:right" id="content-desktop">
 						<button type="button" class="btn" style="background-color:#2A739E;color:white;" data-toggle="modal" data-target="#historyModal">
 							<i class="fa fa-history"></i>&nbsp;&nbsp;History
-						</button>&nbsp;&nbsp;															<?php
-						if($row['deleted'] == null)
-						{																				?>
-							<button type="button" class="btn" style="background-color:#708090;color:white;" data-toggle="modal" data-target="#holdingModal">
-								<i class="fas fa-box"></i>&nbsp;&nbsp;Holding
-							</button>																	<?php
-						}																				?>
+						</button>&nbsp;&nbsp;
 					</div>	
 				</div>
 		</nav>
@@ -234,8 +200,6 @@ if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 										<input type="text" name="customerName" id="customer" class="form-control" value="<?php echo $row['customer_name']; ?>">
 									</div>
 								</div>
-								&nbsp;&nbsp;
-								<input class="form-check-input" type="checkbox" name="ar_direct" id="autoDiscount" <?php echo ($row['ar_direct']==1 ? 'checked' : '');?>>&nbsp;Shop
 							</div>
 							<div class="row">
 								<div class="col col-md-4 offset-1">
@@ -291,22 +255,11 @@ if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 								</div>								
 							</div>							
 							<p id="displayError" style="color:red;"></p>
-							<br/><?php
-							$entryDate = date('Y-m-d',strtotime($row['entry_date']));
-							if($entryDate > $blockDate && $unlocked && $row['deleted'] == null)
-							{																																						?>
-								<button id="updatebtn" class="btn" style="width:100px;font-size:18px;background-color:#f2cf5b;color:white;"><i class="fa fa-save"></i> Save</button><?php
-							}																																						?>
-							
-						</div>
+							<br/>
+							<button id="updatebtn" class="btn" style="width:100px;font-size:18px;background-color:#f2cf5b;color:white;"><i class="fa fa-save"></i> Save</button>						</div>
 						<div class="card-footer" style="background-color:#f2cf5b;padding:1px;"></div>
 					</div>
-					<br/><br/>																																							<?php
-					if($entryDate > $blockDate && mysqli_num_rows($holdings) <= 0 && $unlocked && $row['deleted'] == null)
-					{																																						?>
-						<button type="button" class="btn" style="float:right;margin-right:150px;background-color:#E6717C;color:#FFFFFF" data-toggle="modal" data-target="#deleteModal">
-						<i class="far fa-trash-alt"></i>&nbsp;&nbsp;Delete</button>																										<?php
-					}																																						?>							
+					<br/><br/>
 				</div>
 			</div>
 			<br/><br/><br/><br/>		

@@ -16,7 +16,6 @@ if(isset($_SESSION["user_name"]))
 		
 		$sqlDate = date("Y-m-d", strtotime($_POST["entryDate"])); 
 		$arId = $_POST['ar'];
-		$engId = $_POST['engineer'];
 		$truck = $_POST['truck'];
 		$godown = $_POST['godown'];
 		$order_no = $_POST['order_no'];
@@ -27,10 +26,6 @@ if(isset($_SESSION["user_name"]))
 		$bill = $_POST['bill'];
 		$customerName = $_POST['customerName'];
 		$customerPhone = $_POST['customerPhone'];
-		if(isset($_POST['ar_direct']))
-			$ar_direct = 1;
-		else	
-			$ar_direct = 0;		
 		$address1 = $_POST['address1'];
 		$entered_by = $_SESSION["user_name"];
 		$entered_on = date('Y-m-d H:i:s');
@@ -41,8 +36,6 @@ if(isset($_SESSION["user_name"]))
 
 		if(empty($discount))
 			$discount = null;			
-		if(empty($engId))
-			$engId = null;	
 		if(empty($order_no))
 			$order_no = null;				
 		if(empty($truck))
@@ -55,17 +48,16 @@ if(isset($_SESSION["user_name"]))
 		else	
 			$locked = 0;
 		
-		$update = mysqli_query($con,"UPDATE nas_sale SET entry_date='$sqlDate', ar_id='$arId', eng_id = ".var_export($engId, true).", truck=".var_export($truck, true).",
+		$update = mysqli_query($con,"UPDATE nas_sale SET entry_date='$sqlDate', ar_id='$arId', truck=".var_export($truck, true).",
 											bill_no='$bill',order_no = ".var_export($order_no, true).",product='$product',qty='$qty',godown=".var_export($godown, true).",
 											discount=".var_export($discount, true).",remarks='$remarks',address1='$address1',customer_name='$customerName', 
-											customer_phone='$customerPhone',ar_direct=$ar_direct, locked = $locked
+											customer_phone='$customerPhone'
 									 WHERE sales_id='$id'") or die(mysqli_error($con));
 					
 		$resultNew = mysqli_query($con,"SELECT * FROM nas_sale WHERE deleted IS NULL AND sales_id='$id'") or die(mysqli_error($con));	
 		$newSale= mysqli_fetch_array($resultNew,MYSQLI_ASSOC);					
 
 		updateUserDetails($oldSale,$newSale);
-		clearPendingTruck($oldSale,$newSale,$con);
 		
 		if(billUpdatedCheck($oldSale,$newSale,$con))
 			$url = 'list.php?success&sql='.$sql.'&range='.$range.'&total='.$total;

@@ -166,8 +166,6 @@ if(isset($_SESSION["user_name"]))
 								<div class="input-group mb-3">
 									<span class="input-group-text" style="width:33%"><i class="far fa-user"></i></i>&nbsp;Customer</span>
 									<input type="text" name="customerName" id="customer" class="form-control">
-									&nbsp;&nbsp;
-									<input class="form-check-input" name="ar_direct" type="checkbox" id="autoDiscount">&nbsp;AR								
 								</div>
 							</div>
 						</div>
