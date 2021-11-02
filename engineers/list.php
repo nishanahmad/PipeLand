@@ -46,8 +46,7 @@ if(isset($_SESSION["user_name"]))
 				$arId = $engineer['id'];
 				$arname = $engineer['name'];
 				$shopName = $engineer['shop_name'];
-				$mobile = $engineer['mobile'];
-				$status = $engineer['isActive'];																								?>
+				$mobile = $engineer['mobile'];																								?>
 				<tr>
 					<td><?php echo $arname; ?></td>	
 					<td><?php echo $shopName; ?></td>	

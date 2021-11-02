@@ -5,27 +5,21 @@ if (strpos($url, 'home') !== false)
 	$flag = 'home';
 if (strpos($url, 'sales') !== false)
 	$flag = 'sales';
-if (strpos($url, 'loading') !== false)
-	$flag = 'loading';
 if (strpos($url, 'trucks') !== false)
 	$flag = 'loading';
-if (strpos($url, 'ar') !== false || strpos($url, 'points') !== false || strpos($url, 'Target') !== false)
+if (strpos($url, 'ar') !== false || strpos($url, 'points') !== false || strpos($url, 'Target') !== false || strpos($url, 'redemption') !== false)
 	$flag = 'ar';
 if (strpos($url, 'engineers') !== false || strpos($url, 'Engineer') !== false)
 	$flag = 'engineers';
-if (strpos($url, 'redemption') !== false)
-	$flag = 'redemption';
 if (strpos($url, 'rate/') !== false)
 	$flag = 'rate';
 if (strpos($url, 'discounts') !== false)
 	$flag = 'discounts';
-if (strpos($url, 'Sheet') !== false)
-	$flag = 'Sheet';
 if (strpos($url, 'reports') !== false)
 	$flag = 'reports';
 
 $today = date('Y-m-d');
-$sql = "SELECT * FROM nas_sale WHERE entry_date = '$today' ORDER BY bill_no ASC";
+$sql = "SELECT * FROM nas_sale WHERE deleted IS NULL AND entry_date = '$today'";
 
 $url = "javascript:location.href='../sales/list.php?range=Today&sql=".$sql."'";
 ?>
@@ -218,43 +212,29 @@ a {
 		  <i class="fa fa-bolt <?php if($flag == 'sales') echo 'glow';?> aria-hidden="true"></i>
 		  Sales
 		</a>
-	  </li>	  
-	  <!--li class="nav-item">
-		<a class="nav-link" <?php if($flag == 'loading') echo 'href="#"'; else echo 'href="../loading/list.php"';?>>
-		  <i class="fa fas fa-dolly <?php if($flag == 'loading') echo 'glow';?> aria-hidden="true"></i>
-		  Loading
-		</a>
-	  </li-->	  	  
+	  </li>
 	  <li class="nav-item">
 		<a class="nav-link" <?php if($flag == 'ar') echo 'href="#"'; else echo 'href="../ar/list.php"';?>>
 		  <i class="fa fa-address-card-o <?php if($flag == 'ar') echo 'glow';?> aria-hidden="true"></i>
 		  AR
 		</a>
 	  </li>	  
-	  <!--li class="nav-item">
-		<a class="nav-link" <?php if($flag == 'engineers') echo 'href="#"'; else echo 'href="../engineers/points.php?"';?>>
-		  <i class="fa fa-hard-hat <?php if($flag == 'engineers') echo 'glow';?> aria-hidden="true"></i>
-		  Engineers
-		</a>
-	  </li-->	  	  
-	  <li class="nav-item">
-		<a class="nav-link" <?php if($flag == 'rate') echo 'href="#"'; else echo 'href="../rate/list.php"';?>>
-		  <i class="fa fa-rupee-sign <?php if($flag == 'rate') echo 'glow';?> aria-hidden="true"></i>
-		  Rate
-		</a>
-	  </li>	  
-	  <li class="nav-item">
-		<a class="nav-link" <?php if($flag == 'discounts') echo 'href="#"'; else echo 'href="../discounts/list.php"';?>>
-		  <i class="fa fa-tags <?php if($flag == 'discounts') echo 'glow';?> aria-hidden="true"></i>
-		  Discounts
-		</a>
-	  </li>	  
-	  <!--li class="nav-item">
-		<a class="nav-link" <?php if($flag == 'Sheet') echo 'href="#"'; else echo 'href="../Sheet/requests.php"';?>>
-		  <i class="fa fa-clone <?php if($flag == 'Sheet') echo 'glow';?> aria-hidden="true"></i>
-		  Sheets
-		</a>
-	  </li-->	  	  
+	  <?php	
+	  if($_SESSION['role'] != 'marketing')
+	  {																																				?>
+		  <li class="nav-item">
+			<a class="nav-link" <?php if($flag == 'rate') echo 'href="#"'; else echo 'href="../rate/list.php"';?>>
+			  <i class="fa fa-rupee-sign <?php if($flag == 'rate') echo 'glow';?> aria-hidden="true"></i>
+			  Rate
+			</a>
+		  </li>	  
+		  <li class="nav-item">
+			<a class="nav-link" <?php if($flag == 'discounts') echo 'href="#"'; else echo 'href="../discounts/list.php"';?>>
+			  <i class="fa fa-tags <?php if($flag == 'discounts') echo 'glow';?> aria-hidden="true"></i>
+			  Discounts
+			</a>
+		  </li>																																		<?php
+	  }																																				?>
 	  <li class="nav-item">
 		<a class="nav-link" <?php if($flag == 'reports') echo 'href="#"'; else echo 'href="../reports/salesSummary.php"';?>>
 		  <i class="fa fa-chart-area <?php if($flag == 'reports') echo 'glow';?> aria-hidden="true"></i>
@@ -296,12 +276,6 @@ a {
 			Sales
 		</a>		
 	</div>
-	<div class="mobile-bottom-nav__item <?php if($flag == 'Sheet') echo 'glow-mobile';?>">		
-		<div class="mobile-bottom-nav__item-content" onclick="javascript:location.href='../Sheet/requests.php'">
-			<i class="fa fa-clone fa-lg" aria-hidden="true"></i>
-			Sheets
-		</div>
-	</div>
 	<div class="mobile-bottom-nav__item <?php if($flag == 'reports') echo 'glow-mobile';?>">
 		<div class="mobile-bottom-nav__item-content" onclick="javascript:location.href='../reports/salesSummary.php'">
 			<i class="fa fa-chart-area fa-lg" aria-hidden="true"></i>
@@ -311,7 +285,7 @@ a {
 	<div class="mobile-bottom-nav__item">
 		<div class="mobile-bottom-nav__item-content" onclick="javascript:location.href='https://menu.kannurzone.com/home.php'">
 			<i class="fas fa-th-large"></i>
-			PL
+			NAS
 		</div>		
 	</div>	
 </nav>

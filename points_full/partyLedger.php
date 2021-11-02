@@ -19,7 +19,7 @@ if(isset($_SESSION["user_name"]))
 		$arId = 1;
 	}
 	
-	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,sap_code FROM ar_details WHERE isActive = 1") or die(mysqli_error($con));		 
+	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,sap_code FROM ar_details") or die(mysqli_error($con));		 
 	foreach($arObjects as $ar)
 	{
 		$pickList[$ar['id']] = $ar['name'];
@@ -39,7 +39,7 @@ if(isset($_SESSION["user_name"]))
 			$targetMap[$target['ar_id']]['payment_perc'] = $target['payment_perc'];
 		}
 		
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];
@@ -80,7 +80,7 @@ if(isset($_SESSION["user_name"]))
 			$arId = $specialTarget['ar_id'];
 			$start = $specialTarget['fromDate'];
 			$end = $specialTarget['toDate'];
-			$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
+			$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
 			foreach($sales as $sale)
 			{
 				$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
@@ -320,7 +320,7 @@ function getPrevPoints($arList,$endYear,$endMonth,$dateString)
 	{
 		$start = $stDate['from_date'];
 		$end = $stDate['to_date'];
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];

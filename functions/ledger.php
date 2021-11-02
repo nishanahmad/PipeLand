@@ -33,7 +33,7 @@ function getSpecialTargets($year,$arId)
 		$dateString = date('d',strtotime($target['fromDate'])). ' to ' .date('d',strtotime($target['toDate']));
 		$specialTargetMap[$month][$dateString]['target'] = $target['special_target'];
 		
-		$sql = mysqli_query($con, "SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$from' AND entry_date <= '$to' AND ar_id = '$arId'" ) or die(mysqli_error($con));
+		$sql = mysqli_query($con, "SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$from' AND entry_date <= '$to' AND ar_id = '$arId'" ) or die(mysqli_error($con));
 		$sale = mysqli_fetch_array($sql,MYSQLI_ASSOC);
 		$specialTargetMap[$month][$dateString]['sale'] = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 		
@@ -86,7 +86,7 @@ function getSales($year,$arId)
 	require '../connect.php';
 	
 	$saleMap = array();	
-	$salesList = mysqli_query($con, "SELECT SUM(qty),SUM(return_bag),MONTH(entry_date) FROM nas_sale WHERE YEAR(entry_date) = '$year' AND ar_id = '$arId' GROUP BY MONTH(entry_date) ORDER BY MONTH(entry_date) ASC" ) or die(mysqli_error($con));
+	$salesList = mysqli_query($con, "SELECT SUM(qty),SUM(return_bag),MONTH(entry_date) FROM nas_sale WHERE deleted IS NULL AND YEAR(entry_date) = '$year' AND ar_id = '$arId' GROUP BY MONTH(entry_date) ORDER BY MONTH(entry_date) ASC" ) or die(mysqli_error($con));
 	foreach($salesList as $sale) 
 	{
 		$saleMap[$sale['MONTH(entry_date)']] = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
@@ -97,7 +97,7 @@ function getSales($year,$arId)
 
 
 
-function getPoints($year,$saleMap,$isActive,$targetMap)
+function getPoints($year,$saleMap,$targetMap)
 {
 	require '../connect.php';
 	require 'targetFormula.php';
@@ -111,7 +111,7 @@ function getPoints($year,$saleMap,$isActive,$targetMap)
 		$pointsMap[$month]['achieved_points'] = null;
 		$pointsMap[$month]['payment_points'] = null;					
 
-		if(isset($targetMap[$month]['target']) && $isActive && $targetMap[$month]['target'] >0)
+		if(isset($targetMap[$month]['target']) && $targetMap[$month]['target'] >0)
 		{
 			$points = round($total * $targetMap[$month]['rate'],0);
 			$actual_perc = round($total * 100 / $targetMap[$month]['target'],0);
@@ -135,7 +135,7 @@ function getPoints($year,$saleMap,$isActive,$targetMap)
 }
 
 
-function getOpeningPoints($year,$arId,$isActive)
+function getOpeningPoints($year,$arId)
 {
 	require '../connect.php';
 	
@@ -170,7 +170,7 @@ function getOpeningPoints($year,$arId,$isActive)
 				
 				foreach($saleMap as $month => $total)
 				{
-					if(isset($targetMap[$month]['target']) && $isActive && $targetMap[$month]['target'] >0)
+					if(isset($targetMap[$month]['target']) && $targetMap[$month]['target'] >0)
 					{
 							$points = round($total * $targetMap[$month]['rate'],0);
 							$actual_perc = round($total * 100 / $targetMap[$month]['target'],0);

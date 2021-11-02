@@ -19,7 +19,7 @@ function getSaleMap($arIds,$startYear,$endYear)
 									  sum(if(month(entry_date) = 10, IFNULL(qty, 0) - IFNULL(return_bag, 0), 0)) AS '10',
 									  sum(if(month(entry_date) = 11, IFNULL(qty, 0) - IFNULL(return_bag, 0), 0)) AS '11',
 									  sum(if(month(entry_date) = 12, IFNULL(qty, 0) - IFNULL(return_bag, 0), 0)) AS '12'
-										FROM nas_sale WHERE YEAR(entry_date) = '$year' AND ar_id IN('$arIds')
+										FROM nas_sale WHERE deleted IS NULL AND YEAR(entry_date) = '$year' AND ar_id IN('$arIds')
 										GROUP BY ar_id")  or die(mysqli_error($con));		 
 		foreach($sales as $sale)
 		{

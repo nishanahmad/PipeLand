@@ -25,7 +25,7 @@ if(isset($_SESSION["user_name"]))
 		$lastTargetMonth = $month - 1;
 	}
 
-	$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE type = 'AR/SR' ORDER BY name asc") or die(mysqli_error($con));
+	$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE type != 'Engineer' ORDER BY name asc") or die(mysqli_error($con));
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']] = $ar['name'];

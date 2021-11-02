@@ -17,15 +17,14 @@ if(isset($_SESSION["user_name"]))
 		$urlYear = date("Y");
 	
 	$arName = $ar['name'];
-	$isActive = $ar['isActive'];
 	
 	$targetMap = getTargets($urlYear,$urlId);
 	$specialTargetMap = getSpecialTargets($urlYear,$urlId);
 	$boosterMap = getBoosters($urlYear);
 	$redemptionMap = getRedemptions($urlYear,$urlId);
 	$saleMap = getSales($urlYear,$urlId);
-	$pointsMap = getPoints($urlYear,$saleMap,$isActive,$targetMap);
-	$openingPoints = getOpeningPoints($urlYear,$urlId,$isActive);																									?>
+	$pointsMap = getPoints($urlYear,$saleMap,$targetMap);
+	$openingPoints = getOpeningPoints($urlYear,$urlId);																									?>
 	
 <html>
 	<head>
@@ -97,32 +96,13 @@ if(isset($_SESSION["user_name"]))
 							<td><i class="fa fa-cog"></i> Type</td>
 							<td>: <?php echo $ar['type'];?></td>
 						  </tr>					  					  
-						  <tr>
-							<td><i class="fa fa-bars"></i> Status</td>																								<?php
-							if($ar['isActive'])
-							{																											?>
-								<td>: Active</td>																				<?php
-							}
-							else
-							{																											?>
-								<td>: Inactive</td>																				<?php
-							}																											?>
-						  </tr>					  					  
 						</table>  
 					</div>
 				  </div>
 				  <div class="col-md-4">
 					<br/><br/>
 					<a  href="edit.php?id=<?php echo $ar['id'];?>" class="btn btn-theme" style="width:120px"><i class="fa fa-pencil"></i> Edit AR</a>
-					<br/><br/><?php
-					if($ar['isActive'])
-					{																											?>
-						<a type="submit" class="btn btn-danger" id="deActivate" style="width:120px"><i class="fa fa-times"></i> Deactivate</a><?php
-					}
-					else
-					{																											?>
-						<a type="submit" class="btn btn-success" id="activate" style="width:120px"><i class="fa fa-check"></i> Activate</a>																				<?php
-					}																											?>					
+					<br/>
 				  </div>
 				</div>
 			</div>

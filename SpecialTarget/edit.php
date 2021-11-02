@@ -54,7 +54,7 @@ if(isset($_SESSION["user_name"]))
 	$fromString = $from.'-'.$month.'-'.$year;		
 	$fromDate = date("Y-m-d",strtotime($fromString));	
 
-	$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE Type LIKE '%AR%' ORDER BY name ASC") or die(mysqli_error($con));
+	$arObjects = mysqli_query($con, "SELECT id,name FROM ar_details WHERE Type != 'Engineer' ORDER BY name ASC") or die(mysqli_error($con));
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']] = $ar['name'];

@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 require '../connect.php';
 if(isset($_SESSION["user_name"]))
 {			
-	$clients = mysqli_query($con,"SELECT id,name FROM ar_details WHERE type= 'AR/SR' ORDER BY name ASC");
+	$clients = mysqli_query($con,"SELECT id,name FROM ar_details ORDER BY name ASC");
 	$products= mysqli_query($con,"SELECT id,name FROM products ORDER BY id ASC");																?>
 	
 	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
@@ -18,7 +18,7 @@ if(isset($_SESSION["user_name"]))
 			</div>
 			<div class="modal-body">
 				<br/>
-				<p id="error" style="color:red;"></p>
+				<p id="displayError" style="color:red;"></p>
 				<div class="col col-md-5 offset-1">
 					<div class="input-group">
 						<span class="input-group-text col-md-5"><i class="far fa-calendar-alt"></i>&nbsp;Start Date</span>
@@ -58,6 +58,19 @@ if(isset($_SESSION["user_name"]))
 						</select>					
 					</div>
 				</div>
+				<br/>
+				<div class="col col-md-7 offset-1">
+					<div class="input-group">
+						<span class="input-group-text" style="width:135px;"><i class="fa fa-suitcase"></i>&nbsp;Engineer</span>
+						<select name="eng-filter" id="eng-filter" class="form-control" style="width:250px;">
+							<option value = "">ALL</option>																			<?php
+							foreach($engineers as $engineer) 
+							{																													?>
+								<option value="<?php echo $engineer['id'];?>"><?php echo $engineer['name'];?></option>										<?php	
+							}																													?>
+						</select>					
+					</div>
+				</div>	
 				<br/>
 				<div class="col col-md-5 offset-1">
 					<div class="input-group">
@@ -104,10 +117,33 @@ if(isset($_SESSION["user_name"]))
 							data:data,
 							success: function(response){
 								if(response)
+								{
 									window.location.href = 'list.php?sql='+response+'&range=Custom Filter';
+									console.log(response);
+								}
 								else
 									$("#error").text('Search returned too many sales. Please apply more filters');
-							}
+							},
+							error: function (jqXHR, exception) {
+								var msg = '';
+								if (jqXHR.status === 0) {
+									msg = 'Not connect.\n Verify Network.';
+								} else if (jqXHR.status == 404) {
+									msg = 'Requested page not found. [404]';
+								} else if (jqXHR.status == 500) {
+									msg = 'Internal Server Error [500].';
+								} else if (exception === 'parsererror') {
+									msg = 'Requested JSON parse failed.';
+								} else if (exception === 'timeout') {
+									msg = 'Time out error.';
+								} else if (exception === 'abort') {
+									msg = 'Ajax request aborted.';
+								} else {
+									msg = 'Uncaught Error.\n' + jqXHR.responseText;
+								}
+								$("#displayError").text(msg);
+								return false;
+							}							
 						});					
 					});
 				});

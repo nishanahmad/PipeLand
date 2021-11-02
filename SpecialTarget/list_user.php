@@ -61,7 +61,7 @@ if(isset($_SESSION["user_name"]))
 	
 	$zeroTargetIds = implode("','",array_keys($zeroTargetMap));
 	
-	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name, user_id FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ") or die(mysqli_error($con));		 
+	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name, user_id FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type != 'Engineer' ") or die(mysqli_error($con));		 
 	foreach($arList as $arObject)
 	{
 		$arNameMap[$arObject['id']] = $arObject['name'];

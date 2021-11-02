@@ -16,7 +16,7 @@ if(isset($_SESSION["user_name"]))
 	require 'newModal.php';
 
 	$rateMap = getRates($con);
-	$productNamesMap = getProductNames($con);																													?>
+	$productNamesMap = getProductNames($con);																									?>
 	
 <html>
 	<head>

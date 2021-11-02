@@ -17,14 +17,13 @@ if(isset($_SESSION["user_name"]))
 		$urlYear = date("Y");
 	
 	$arName = $ar['name'];
-	$isActive = $ar['isActive'];
 	
 	$targetMap = getTargets($urlYear,$urlId);
 	$specialTargetMap = getSpecialTargets($urlYear,$urlId);
 	$redemptionMap = getRedemptions($urlYear,$urlId);
 	$saleMap = getSales($urlYear,$urlId);
-	$pointsMap = getPoints($urlYear,$saleMap,$isActive,$targetMap);
-	$openingPoints = getOpeningPoints($urlYear,$urlId,$isActive);	
+	$pointsMap = getPoints($urlYear,$saleMap,$targetMap);
+	$openingPoints = getOpeningPoints($urlYear,$urlId);	
 ?>
 <html>
 	<head>
@@ -96,25 +95,13 @@ if(isset($_SESSION["user_name"]))
 							<td>Type</td>
 							<td>: <?php echo $ar['type'];?></td>
 						  </tr>					  					  
-						  <tr>
-							<td>Status</td>																								<?php
-							if($ar['isActive'])
-							{																											?>
-								<td>: Active</td>																				<?php
-							}
-							else
-							{																											?>
-								<td>: Inactive</td>																				<?php
-							}																											?>
-						  </tr>					  					  
 						</table>  
 					</div>
 				  </div>
 				  <div class="col-md-4">
 					<br/><br/>
 					<a  href="edit.php?id=<?php echo $ar['id'];?>" class="btn btn-theme" style="width:120px"><i class="fa fa-pencil"></i> Edit Engineer</a>
-					<br/><br/>
-					<a type="submit" class="btn btn-danger" id="delete" style="width:120px"><i class="fa fa-times"></i> Deactivate</a>	
+					<br/>
 				  </div>
 				</div>
 			</div>

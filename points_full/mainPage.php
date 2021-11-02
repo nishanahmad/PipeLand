@@ -51,11 +51,12 @@ if(isset($_SESSION["user_name"]))
 		echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $URL . '">';
 	}
 	
-	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,shop_name,sap_code FROM ar_details WHERE isActive = 1 AND Type LIKE '%AR%' ORDER BY name ASC ") or die(mysqli_error($con));		 
+	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,whatsapp,shop_name,sap_code FROM ar_details WHERE Type != 'Engineer' ORDER BY name ASC ") or die(mysqli_error($con));		 
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']]['name'] = $ar['name'];
 		$arMap[$ar['id']]['mobile'] = $ar['mobile'];
+		$arMap[$ar['id']]['whatsapp'] = $ar['whatsapp'];
 		$arMap[$ar['id']]['shop'] = $ar['shop_name'];
 		$arMap[$ar['id']]['sap'] = $ar['sap_code'];
 	}				
@@ -72,9 +73,10 @@ if(isset($_SESSION["user_name"]))
 			$targetMap[$target['ar_id']]['target'] = $target['target'];
 			$targetMap[$target['ar_id']]['rate'] = $target['rate'];
 			$targetMap[$target['ar_id']]['payment_perc'] = $target['payment_perc'];
+			$monthTgtDetails[$target['ar_id']][$year][$month] = $target['target'];
 		}
 		
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$year' = year(`entry_date`) AND '$month' = month(`entry_date`) AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];
@@ -97,11 +99,14 @@ if(isset($_SESSION["user_name"]))
 					$payment_points = round($achieved_points * $targetMap[$arId]['payment_perc']/100,0);
 				else
 					$payment_points = 0;			
-				$pointMap[$arId]['points'] = $payment_points;			
+				
+				$pointMap[$arId]['points'] = $payment_points;
+				$pointMap[$arId]['point_perc'] = $point_perc;
 			}
 			else
 			{
 				$pointMap[$arId]['points'] = 0;
+				$pointMap[$arId]['point_perc'] = 0;
 			}	
 		}			
 	}
@@ -125,7 +130,7 @@ if(isset($_SESSION["user_name"]))
 			$arId = $specialTarget['ar_id'];
 			$start = $specialTarget['fromDate'];
 			$end = $specialTarget['toDate'];
-			$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
+			$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$start' AND entry_date <= '$end' AND ar_id = '$arId' GROUP BY ar_id") or die(mysqli_error($con));	
 			foreach($sales as $sale)
 			{
 				$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
@@ -208,6 +213,7 @@ if(isset($_SESSION["user_name"]))
 					<li><a href="../ar/list.php">AR List</a></li>
 					<li class="active"><a href="#">Target</a></li>
 					<li><a href="../SpecialTarget/list.php?">Special Target</a></li>
+					<li><a href="../redemption/list.php?">Redemption</a></li>
 				</ul>
 			</nav>
 		</aside>
@@ -219,7 +225,7 @@ if(isset($_SESSION["user_name"]))
 							Accumulated Points
 						</button>
 						<ul class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="cursor:pointer">
-							<li><a href="../Target/monthlyPointsList.php?" class="dropdown-item">Monthly Points</a></li>
+							<li><a href="../Target/list.php?" class="dropdown-item">Monthly Points</a></li>
 							<li><a href="../Target/edit.php?" class="dropdown-item">Update Target</a></li>
 						</ul>
 					</div>
@@ -243,10 +249,10 @@ if(isset($_SESSION["user_name"]))
 			</div>		
 			<div id="mainbody">	
 				<br/><br/>		
-				<div class="row" style="margin-left:42%">
-					<div style="width:100px;">
+				<div class="row">
+					<div style="width:120px;margin-left:42%">
 						<div class="input-group">
-							<select id="jsYear" name="jsYear" class="form-control" onchange="return rerender();">																				<?php	
+							<select id="jsYear" name="jsYear" class="form-select" onchange="return rerender();">																				<?php	
 								$yearList = mysqli_query($con, "SELECT DISTINCT year FROM target ORDER BY year DESC") or die(mysqli_error($con));	
 								foreach($yearList as $yearObj) 
 								{																																								?>
@@ -257,7 +263,7 @@ if(isset($_SESSION["user_name"]))
 					</div>						
 					<div style="width:150px;">
 						<div class="input-group">
-							<select id="jsMonth" name="jsMonth" class="form-control" onchange="return rerender();">																				<?php	
+							<select id="jsMonth" name="jsMonth" class="form-select" onchange="return rerender();">																				<?php	
 								$monthList = mysqli_query($con, "SELECT DISTINCT month FROM target WHERE year = $year ORDER BY month ASC" ) or die(mysqli_error($con));	
 								foreach($monthList as $monthObj) 
 								{																																		?>
@@ -268,7 +274,7 @@ if(isset($_SESSION["user_name"]))
 					</div>
 					<div style="width:150px;">
 						<div class="input-group">
-							<select id="jsDateString" name="jsDateString" class="form-control" onchange="return rerender2();">											<?php	
+							<select id="jsDateString" name="jsDateString" class="form-select" onchange="return rerender2();">											<?php	
 								if(!isset($stringList))
 									$stringList = getStrings($year,$month);
 									$stringList[] = 'FULL';
@@ -281,15 +287,17 @@ if(isset($_SESSION["user_name"]))
 					</div>				
 				</div>	
 				<br/><br/>
-				<table id="Points" class="maintable table table-hover table-bordered ui-table-reflow" style="width:92%;margin-left:15%;">
+				<table id="Points" class="maintable table table-hover table-bordered" style="width:92%;margin-left:15%;">
 				<thead>
 					<tr class="table-success">
 						<th style="width:20%;text-align:left;">AR</th>
-						<th style="width:12%;">Mobile</th>
-						<th style="width:25%;text-align:left;">Shop</th>
-						<th style="width:10%;">SAP</th>
+						<th>Mobile</th>
+						<th>Whatsapp</th>
+						<th style="width:20%;text-align:left;">Shop</th>
+						<th>target</th>
 						<th>Opng Pnts</th>
 						<th>Current Pnts</th>	
+						<th>Current%</th>	
 						<th>Redeemed Pnts</th>	
 						<th>Balance</th>	
 					</tr>
@@ -311,14 +319,16 @@ if(isset($_SESSION["user_name"]))
 						
 						
 						<tr align="center">
-						<td style="text-align:left;"><?php echo $detailMap['name'];?></b></td>
-						<td><?php echo $detailMap['mobile'];?></b></td>
-						<td style="text-align:left;"><?php echo $detailMap['shop'];?></b></td>
-						<td><?php echo $detailMap['sap'];?></b></td>
-						<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];?></b></td>
-						<td><?php echo $pointMap[$arId]['points'];?></td>
-						<td><?php echo $redemptionMap[$arId];?></td>
-						<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];?></td>
+							<td style="text-align:left;"><?php echo $detailMap['name'];?></b></td>
+							<td><?php echo $detailMap['mobile'];?></b></td>
+							<td><?php echo $detailMap['whatsapp'];?></b></td>
+							<td style="text-align:left;"><?php echo $detailMap['shop'];?></b></td>
+							<td><?php if(isset($monthTgtDetails[$arId][$year][$month]))echo $monthTgtDetails[$arId][$year][$month]; else echo '0';?></b></td>
+							<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];?></b></td>
+							<td><?php echo $pointMap[$arId]['points'];?></td>
+							<td><?php if(isset($pointMap[$arId]['point_perc'])) echo $pointMap[$arId]['point_perc'].'%'; else echo '0%';?></td>
+							<td><?php echo $redemptionMap[$arId];?></td>
+							<td><?php echo $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];?></td>
 						</tr>																																							<?php
 						$openingTotal = $openingTotal + $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'];
 						$currentTotal = $currentTotal + $pointMap[$arId]['points'];
@@ -326,11 +336,8 @@ if(isset($_SESSION["user_name"]))
 						$balanceTotal = $balanceTotal + $prevMap[$arId]['prevPoints'] - $prevMap[$arId]['prevRedemption'] + $pointMap[$arId]['points'] - $redemptionMap[$arId];
 					}																																									?>
 				<thead>
-					<tr>
-						<th style="width:20%;text-align:left;"></th>
-						<th style="width:12%;"></th>
-						<th style="width:25%;text-align:left;"></th>
-						<th style="width:10%;"></th>
+					<tr style="text-align:center">
+						<th colspan="4"></th>
 						<th><?php echo $openingTotal;?></th>
 						<th><?php echo $currentTotal;?></th>	
 						<th><?php echo $redeemedTotal;?></th>	
@@ -437,7 +444,7 @@ function getPrevPoints($arList,$endYear,$endMonth,$dateString)
 	{
 		$start = $stDate['from_date'];
 		$end = $stDate['to_date'];
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$start' AND entry_date <= '$end' AND ar_id IN ('$arIds') GROUP BY ar_id") or die(mysqli_error($con));	
 		foreach($sales as $sale)
 		{
 			$arId = $sale['ar_id'];

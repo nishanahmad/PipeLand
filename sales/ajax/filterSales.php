@@ -1,7 +1,7 @@
 <?php
 	require '../../connect.php';
 	
-	$sql = "SELECT * FROM nas_sale WHERE 1 = 1";
+	$sql = "SELECT * FROM nas_sale WHERE deleted IS NULL";
 	if(!empty($_POST['startDate']))
 	{
 		$startDate = date('Y-m-d',strtotime($_POST['startDate']));
@@ -20,24 +20,23 @@
 	if(!empty($_POST['client']))
 	{
 		$client = $_POST['client'];
-		$sql = $sql." AND (ar_id = '$client' OR eng_id = '$client')";
+		$sql = $sql." AND ar_id = '$client'";
 	}
+	if(!empty($_POST['eng']))
+	{
+		$eng = $_POST['eng'];
+		$sql = $sql." AND eng_id = '$eng'";
+	}	
 	if(!empty($_POST['phone']))
 	{
 		$phone = $_POST['phone'];
 		$sql = $sql." AND customer_phone = '$phone'";
 	}		
-	
-	if(isset($startDate) && isset($endDate))
-	{
-		if($startDate == $endDate && $startDate == date('Y-m-d'))
-			$sql = $sql." ORDER BY bill_no ASC";		
-	}
-	
+		
 	$result=mysqli_query($con,$sql);
 	$rowcount=mysqli_num_rows($result);
 	
-	if($rowcount <= 1000)
+	if($rowcount <= 2000)
 		echo $sql;
 	else
 		echo null;

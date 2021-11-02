@@ -1,28 +1,63 @@
 <?php
+ini_set('max_execution_time', '0'); // for infinite time of execution 
+ini_set('memory_limit', '-1');
 
 function getSales($con,$sql)
 {	
-	if(!strpos($sql,'ORDER BY bill_no') !== false)
-		$sql = $sql.' ORDER BY entry_date DESC';
-				
 	$mainMap = array();
-	$salesQuery = mysqli_query($con,$sql) or die(mysqli_error($con));
 	
+	if(!strpos($sql,'ORDER BY bill_no') !== false)
+	{
+		$sql = $sql.' ORDER BY entry_date DESC';
+	}
+	else
+	{
+		$today = date('Y-m-d');
+		$day10backwards = date( 'Y-m-d', strtotime('-10 days') );		
+		$unbilledOldSalesQuery = mysqli_query($con,"SELECT * FROM nas_sale WHERE deleted IS NULL AND entry_date < '$today' AND entry_date > '$day10backwards'") or die(mysqli_error($con));
+		foreach($unbilledOldSalesQuery as $sale) 
+		{
+			if( !(fnmatch("B*",$sale['bill_no']) || fnmatch("C*",$sale['bill_no']) || fnmatch("GB*",$sale['bill_no']) || fnmatch("GC*",$sale['bill_no']) || fnmatch("PB*",$sale['bill_no']) || fnmatch("PC*",$sale['bill_no'])))
+			{
+				$saleArray = array();
+				$saleArray['id'] = $sale['sales_id'];
+				$saleArray['date'] = $sale['entry_date'];
+				$saleArray['client'] = $sale['ar_id'];
+				$saleArray['engineer'] = $sale['eng_id'];
+				$saleArray['product'] = $sale['product'];
+				$saleArray['qty'] = $sale['qty'];
+				$saleArray['discount'] = $sale['discount'];
+				$saleArray['bill'] = $sale['bill_no'];
+				$saleArray['truck'] = $sale['truck'];
+				$saleArray['name'] = $sale['customer_name'];
+				$saleArray['phone'] = $sale['customer_phone'];
+				$saleArray['remarks'] = $sale['remarks'];
+				$saleArray['address'] = $sale['address1'];
+				$saleArray['direct_order'] = $sale['direct_order'];
+				
+				$mainMap[] = $saleArray;			
+			}			
+		}
+	}
+		
+	$salesQuery = mysqli_query($con,$sql) or die(mysqli_error($con));	
 	foreach($salesQuery as $sale) 
 	{ 
 		$saleArray = array();
 		$saleArray['id'] = $sale['sales_id'];
 		$saleArray['date'] = $sale['entry_date'];
 		$saleArray['client'] = $sale['ar_id'];
+		$saleArray['engineer'] = $sale['eng_id'];
 		$saleArray['product'] = $sale['product'];
 		$saleArray['qty'] = $sale['qty'];
 		$saleArray['discount'] = $sale['discount'];
 		$saleArray['bill'] = $sale['bill_no'];
-		$saleArray['truck_no'] = $sale['truck_no'];
+		$saleArray['truck'] = $sale['truck'];
 		$saleArray['name'] = $sale['customer_name'];
 		$saleArray['phone'] = $sale['customer_phone'];
 		$saleArray['remarks'] = $sale['remarks'];
 		$saleArray['address'] = $sale['address1'];
+		$saleArray['direct_order'] = $sale['direct_order'];
 		
 		$mainMap[] = $saleArray;
 	}
@@ -34,7 +69,7 @@ function getProductSum($con,$sql)
 {	
 	$productSumMap = array();
 	if(strpos($sql,'ORDER BY bill_no') !== false)
-		$sql = str_replace('ORDER BY bill_no ASC','',$sql);
+		$sql = str_replace('ORDER BY bill_no','',$sql);
 	
 	$sql = str_replace('*','SUM(qty),product',$sql);
 	$sql = $sql.' GROUP BY product';
@@ -65,6 +100,28 @@ function getClientNames($con)
 	$clients = mysqli_query($con,"SELECT id,name FROM ar_details ORDER BY name ASC");	
 	foreach($clients as $client)
 		$clientMap[$client['id']] = $client['name'];	
+		
+	return $clientMap;	
+}
+
+
+function getGodownNames($con)
+{
+	$godownMap = array();
+	$godowns = mysqli_query($con,"SELECT * FROM godowns ORDER BY name");
+	foreach($godowns as $godown)
+		$godownMap[$godown['id']] = $godown['name'];	
+		
+	return $godownMap;	
+}
+
+
+function getClientType($con)
+{
+	$clientMap = array();
+	$clients = mysqli_query($con,"SELECT id,type FROM ar_details ORDER BY name ASC");	
+	foreach($clients as $client)
+		$clientMap[$client['id']] = $client['type'];
 		
 	return $clientMap;	
 }

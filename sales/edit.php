@@ -2,12 +2,14 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
-if(isset($_SESSION["user_name"]))
+if(isset($_SESSION["user_name"]) && $_SESSION["role"] != 'marketing')
 {
 	require '../connect.php';
 	require 'getHistory.php';
+	require 'sheetModal.php';
 	require 'rateBreakDownModal.php';
-	//require 'historyModal.php';
+	require 'holdingModal.php';
+	require 'historyModal.php';
 	require 'newTruckModal.php';
 	require 'deleteModal.php';
 	require '../navbar.php';
@@ -15,14 +17,12 @@ if(isset($_SESSION["user_name"]))
 	$urlsql = $_GET['sql'];
 	$urlrange = $_GET['range'];
 	
+	$engMap = null;
 	$products = mysqli_query($con,"SELECT id,name FROM products WHERE status = 1 ORDER BY id ASC") or die(mysqli_error($con));	
 	$arObjects = mysqli_query($con,"SELECT id,name,type,shop_name FROM ar_details ORDER BY name") or die(mysqli_error($con));	
 	foreach($arObjects as $ar)
 	{
-		if($ar['type'] != 'Engineer Only')
-			$arMap[$ar['id']] = $ar['name']; 
-		if($ar['type'] == 'Engineer' || $ar['type'] == 'Contractor' || $ar['type'] == 'Engineer Only')
-			$engMap[$ar['id']] = $ar['name'];
+		$arMap[$ar['id']] = $ar['name']; 
 		
 		$shopName = strip_tags($ar['shop_name']); 
 		$shopNameMap[$ar['id']] = $shopName;
@@ -43,16 +43,25 @@ if(isset($_SESSION["user_name"]))
 		$URL='list.php?sql='.$_POST['sql1'].'&range='.$_POST['range1'];
 		echo "<script type='text/javascript'>document.location.href='{$URL}';</script>";
 		echo '<META HTTP-EQUIV="refresh" content="0;URL=' . $URL . '">';		
-	}																																								?>
+	}																																							
 
+	$blockDateQuery = mysqli_query($con,"SELECT date FROM block_old_sale") or die(mysqli_error($con));
+	$blockDate = mysqli_fetch_array($blockDateQuery,MYSQLI_ASSOC)['date'];
+	$blockDate = date('Y-m-d',strtotime($blockDate));																																											
+	
+	$holdings = mysqli_query($con,"SELECT * FROM holdings WHERE returned_sale =".$row['sales_id']." OR cleared_sale =".$row['sales_id']) or die(mysqli_error($con));
+	
+	$unlocked = true;
+	$lockedQuery = mysqli_query($con,"SELECT * FROM lock_sale WHERE sale =".$row['sales_id']) or die(mysqli_error($con));
+	if(mysqli_num_rows($lockedQuery) > 0)
+		$unlocked = false;																																								?>
+	
+	
 	<html>
 	<head>
 		<title>Edit Sale <?php echo $row['sales_id']; ?></title>
-		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
 		<link href="../css/styles.css" rel="stylesheet" type="text/css">
-		<link rel="stylesheet" media="screen and (max-device-width: 768px)" href="../css/neomorphism.css"/>
-		<link href="../css/navbarMobile.css" media="screen and (max-device-width: 768px)" rel="stylesheet" type="text/css">		
 		<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
@@ -66,15 +75,6 @@ if(isset($_SESSION["user_name"]))
 			var shopName_array = JSON.parse(shopNameList);
 			var shopNameArray = shopName_array;
 		</script>
-		<style>
-			#content-desktop {display: block;}
-			#content-mobile {display: none;}
-
-			@media screen and (max-width: 768px) {
-			  #content-desktop {display: none;}
-			  #content-mobile {display: block;}
-			}		
-		</style>
 	</head>
 	<body>
 		<nav class="navbar navbar-light bg-light sticky-top bottom-nav">
@@ -88,11 +88,33 @@ if(isset($_SESSION["user_name"]))
 				</form>
 			</div>
 			<span class="navbar-brand" style="font-size:25px;margin-left:10%;"><i class="fa fa-bolt"></i> Sale</span>
-				<div style="float:right;margin-right:20px;">
+				<div style="float:right;margin-right:20px;"><?php
+					if($row['deleted'] == null)
+					{
+						if(isset($sheet))
+						{																																						?>
+							<button type="button" class="btn" id="sheetMdlBtn" style="background-color:#F2CF5B;color:white;" data-toggle="modal" data-target="#sheetModal">
+								<i class="far fa-edit"></i>&nbsp;&nbsp;Sheet
+							</button>&nbsp;&nbsp;																																			<?php
+						}
+						else
+						{																																						?>
+							<button type="button" class="btn" id="sheetMdlBtn" style="background-color:#7dc37d;color:white;" data-toggle="modal" data-target="#sheetModal">
+								<i class="fas fa-plus"></i>&nbsp;&nbsp;Sheet
+							</button>																																			<?php
+						}																																												
+					}																																					?>
+					&nbsp;
 					<div style="float:right" id="content-desktop">
 						<button type="button" class="btn" style="background-color:#2A739E;color:white;" data-toggle="modal" data-target="#historyModal">
 							<i class="fa fa-history"></i>&nbsp;&nbsp;History
-						</button>
+						</button>&nbsp;&nbsp;															<?php
+						if($row['deleted'] == null)
+						{																				?>
+							<button type="button" class="btn" style="background-color:#708090;color:white;" data-toggle="modal" data-target="#holdingModal">
+								<i class="fas fa-box"></i>&nbsp;&nbsp;Holding
+							</button>																	<?php
+						}																				?>
 					</div>	
 				</div>
 		</nav>
@@ -103,10 +125,12 @@ if(isset($_SESSION["user_name"]))
 			<input hidden name="sql" id="sql" value="<?php echo $urlsql;?>">
 			<input hidden name="range" id="range" value="<?php echo $urlrange;?>">
 			<div style="width:100%;">
-				<div align="center" style="padding-bottom:5px;">				
+				<div align="center" style="padding-bottom:5px;">
 					<div class="card" style="width:65%;">
-						<div class="card-header" style="background-color:#f2cf5b;font-size:20px;font-weight:bold;color:white">Sale <?php echo $row['sales_id']; ?></div>
+						<div class="card-header" style="background-color:<?php if($row['deleted']) echo '#DC143C';else echo '#f2cf5b';?>;font-size:20px;font-weight:bold;color:white">Sale <?php echo $row['sales_id']; ?></div>
 						<div class="card-body">
+							<div class="card" id="holding-card" style="width:30%;margin-bottom:50px;"></div>
+							<p id="insertError" style="color:red;"></p>							
 							<div class="row">
 								<div class="col col-md-4 offset-1">
 									<div class="input-group">
@@ -119,8 +143,14 @@ if(isset($_SESSION["user_name"]))
 								</div>
 								<div class="col col-md-4 offset-2">
 									<div class="input-group mb-3">
-										<span class="input-group-text col-md-4"><i class="far fa-file-alt"></i>&nbsp;Bill No</span>
-										<input type="text" name="bill" id="bill" class="form-control" value="<?php echo $row['bill_no']; ?>">
+										<span class="input-group-text" style="width:34%"><i class="fas fa-warehouse"></i></i>&nbsp;Godown</span>
+										<select name="godown" id="godown" class="form-control" style="width:60%">
+											<option value = "">---Select---</option>																						<?php
+											foreach($godowns as $godown) 
+											{																							?>
+												<option value="<?php echo $godown['id'];?>" <?php if($godown['id'] == $row['godown']) echo 'selected';?>><?php echo $godown['name'];?></option>			<?php	
+											}																							?>
+										</select>
 									</div>
 								</div>
 							</div>
@@ -138,11 +168,38 @@ if(isset($_SESSION["user_name"]))
 								</div>
 								<div class="col col-md-4 offset-1">
 									<div class="input-group mb-3">
-										<span class="input-group-text col-md-4"><i class="fa fa-truck"></i>&nbsp;Truck</span>
-										<input class="form-control" name="truck_no" value="<?php echo $row['truck_no'];?>">
+										<span class="input-group-text col-md-4"><i class="far fa-file-alt"></i>&nbsp;Bill No</span>
+										<input type="text" name="bill" id="bill" class="form-control" value="<?php echo $row['bill_no']; ?>">										
 									</div>
 								</div>
-							</div>	
+							</div>							
+							<div class="row">
+								<div class="col col-md-5 offset-1">
+									<div class="input-group">
+										<span class="input-group-text col-md-4"><i class="fa fa-hard-hat"></i>&nbsp;Engineer</span>
+										<select name="engineer" id="engineer" class="form-control" style="width:250px;">
+											<option value="">-- NULL --</option>																																<?php
+											foreach($engMap as $engId => $engName)
+											{																																				?>
+												<option value="<?php echo $engId;?>" <?php if($row['eng_id'] == $engId) echo 'selected';?>><?php echo $engName;?></option><?php																																			?>																																						<?php		
+											}																																				?>
+										</select>
+									</div>
+								</div>
+								<div class="col col-md-5 offset-1">
+									<div class="input-group mb-3">
+										<span class="input-group-text col-md-3"><i class="fas fa-truck-moving"></i>&nbsp;Truck</span>
+										<select name="truck" id="truck" class="form-control" style="line-height:20px;width:46%;">	
+											<option value = "">-- NULL --</option>																																		<?php
+											foreach($trucks as $truck) 
+											{																																												?>
+												<option value="<?php echo $truck['id'];?>" <?php if($truck['id'] == $row['truck']) echo 'selected';?>><?php echo $truck['number'];?></option>								<?php	
+											}																																											?>
+										</select>
+										&nbsp;&nbsp;<a data-toggle="modal" data-target="#newTruckModal" style="color:limegreen;cursor:pointer">New</a>										
+									</div>
+								</div>
+							</div>														
 							<div class="row">
 								<div class="col col-md-4 offset-1">
 									<div class="input-group">
@@ -160,7 +217,7 @@ if(isset($_SESSION["user_name"]))
 								<div class="col col-md-4 offset-2">
 									<div class="input-group mb-3">
 										<span class="input-group-text col-md-4" style="width:120px;"><i class="fa fa-money"></i>&nbsp;Order No</span>
-										<input type="text" name="order_no" id="order_no" class="form-control" value="<?php echo $row['order_no']; ?>">
+										<input type="text" name="order_no" id="order_no" class="form-control" value="<?php echo $row['order_no']; ?>">									
 									</div>
 								</div>
 							</div>																					
@@ -173,10 +230,12 @@ if(isset($_SESSION["user_name"]))
 								</div>
 								<div class="col col-md-4 offset-2">
 									<div class="input-group mb-3">
-										<span class="input-group-text col-md-4" style="width:120px;"><i class="far fa-user"></i>&nbsp;Customer</span>
+										<span class="input-group-text col-md-4" style="width:80px;"><i class="far fa-user"></i>&nbsp;Cust</span>
 										<input type="text" name="customerName" id="customer" class="form-control" value="<?php echo $row['customer_name']; ?>">
 									</div>
 								</div>
+								&nbsp;&nbsp;
+								<input class="form-check-input" type="checkbox" name="ar_direct" id="autoDiscount" <?php echo ($row['ar_direct']==1 ? 'checked' : '');?>>&nbsp;Shop
 							</div>
 							<div class="row">
 								<div class="col col-md-4 offset-1">
@@ -193,13 +252,13 @@ if(isset($_SESSION["user_name"]))
 								</div>								
 							</div>							
 							<div class="row">
-								<div class="col col-md-5 offset-1">
+								<div class="col col-md-4 offset-1">
 									<div class="input-group">
-										<span class="input-group-text col-md-3" style="width:125px;"><i class="far fa-comment-dots"></i>&nbsp;Remarks</span>
-										<textarea name="remarks" id="remarks" class="form-control"><?php echo $row['remarks']; ?></textarea>
-									</div>
+										<span class="input-group-text col-md-5"><i class="fa fa-rupee-sign"></i>&nbsp;Final Rate</span>
+										<input readonly id="final" class="form-control" style="cursor:pointer" data-toggle="modal" data-target="#rateBreakDownModal">
+									</div>								
 								</div>
-								<div class="col col-md-5 offset-1">
+								<div class="col col-md-5 offset-2">
 									<div class="input-group mb-3">
 										<span class="input-group-text col-md-3" style="width:100px;"><i class="fas fa-map-marker-alt"></i>&nbsp;Address</span>
 										<textarea name="address1" id="address" class="form-control"><?php echo $row['address1']; ?></textarea>
@@ -209,9 +268,9 @@ if(isset($_SESSION["user_name"]))
 							<div class="row">
 								<div class="col col-md-4 offset-1">
 									<div class="input-group">
-										<span class="input-group-text col-md-5"><i class="fa fa-rupee-sign"></i>&nbsp;Final Rate</span>
-										<input readonly id="final" class="form-control" style="cursor:pointer" data-toggle="modal" data-target="#rateBreakDownModal">
-									</div>
+										<span class="input-group-text col-md-4"><i class="fas fa-money-check-alt"></i>&nbsp;Total</span>
+										<input readonly class="form-control" name="total" id="total">
+									</div>								
 								</div>
 								<div class="col col-md-5 offset-2">
 									<div class="input-group mb-3">
@@ -219,17 +278,35 @@ if(isset($_SESSION["user_name"]))
 										<input type="text" readonly name="shopName" id="shopName" class="form-control">
 									</div>
 								</div>
-							</div>					
+							</div>
+							<div class="row">
+								<div class="col col-md-6 offset-1">
+									<div class="input-group">
+										<span class="input-group-text col-md-3" style="width:125px;"><i class="far fa-comment-dots"></i>&nbsp;Remarks</span>
+										<textarea name="remarks" id="remarks" class="form-control" rows="4"><?php echo $row['remarks']; ?></textarea>
+									</div>
+								</div>
+								<div class="col col-md-4 offset-1">
+
+								</div>								
+							</div>							
 							<p id="displayError" style="color:red;"></p>
-							<br/>
-							<button id="updatebtn" class="btn" style="width:100px;font-size:18px;background-color:#f2cf5b;color:white;"><i class="fa fa-save"></i> Save</button>
+							<br/><?php
+							$entryDate = date('Y-m-d',strtotime($row['entry_date']));
+							if($entryDate > $blockDate && $unlocked && $row['deleted'] == null)
+							{																																						?>
+								<button id="updatebtn" class="btn" style="width:100px;font-size:18px;background-color:#f2cf5b;color:white;"><i class="fa fa-save"></i> Save</button><?php
+							}																																						?>
+							
 						</div>
 						<div class="card-footer" style="background-color:#f2cf5b;padding:1px;"></div>
 					</div>
-					<br/><br/>
-					<button type="button" class="btn" style="float:right;margin-right:150px;background-color:#E6717C;color:#FFFFFF" data-toggle="modal" data-target="#deleteModal">
-						<i class="far fa-trash-alt"></i>&nbsp;&nbsp;Delete
-					</button>					
+					<br/><br/>																																							<?php
+					if($entryDate > $blockDate && mysqli_num_rows($holdings) <= 0 && $unlocked && $row['deleted'] == null)
+					{																																						?>
+						<button type="button" class="btn" style="float:right;margin-right:150px;background-color:#E6717C;color:#FFFFFF" data-toggle="modal" data-target="#deleteModal">
+						<i class="far fa-trash-alt"></i>&nbsp;&nbsp;Delete</button>																										<?php
+					}																																						?>							
 				</div>
 			</div>
 			<br/><br/><br/><br/>		

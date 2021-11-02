@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <?php
+ini_set('max_execution_time', '0'); // for infinite time of execution 
+ini_set('memory_limit', '-1');
 session_start();
 if(isset($_SESSION["user_name"]))
 {
@@ -8,10 +10,13 @@ if(isset($_SESSION["user_name"]))
 	require '../navbar.php';
 	require 'newModal.php';
 	require 'rateModal.php';
+	require 'totalModal.php';
 	require 'filterModal.php';
+	require 'billStatus.php';
 
 	$currentRateMap = getCurrentRates($con);
 	$clientNamesMap = getClientNames($con);
+	$clientTypeMap = getClientType($con);
 	$productDetailsMap = getProductDetails($con);
 	$discountMap = getDiscounts($con);
 	$truckNumbersMap = getTruckNumbers($con);
@@ -25,6 +30,9 @@ if(isset($_SESSION["user_name"]))
 	else
 		$range = 'Custom Filter';
 
+	if($range == 'Today')
+		$filterSql = $filterSql.' ORDER BY bill_no';
+		
 	$mainMap = array();
 	if(isset($filterSql))
 	{
@@ -54,13 +62,11 @@ if(isset($_SESSION["user_name"]))
 		$shopNameArray = json_encode($shopNameMap);
 		$shopNameArray = str_replace('\n',' ',$shopNameArray);
 		$shopNameArray = str_replace('\r',' ',$shopNameArray);		
-	};																																				?>	
-	
+	}																																			?>	
 <html>
 	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1">	
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="../css/styles.css" rel="stylesheet" type="text/css">
-		<link rel="stylesheet" media="screen and (max-device-width: 768px)" href="../css/neomorphism.css"/>
 		<link href="../css/navbarMobile.css" media="screen and (max-device-width: 768px)" rel="stylesheet" type="text/css">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css">
 		<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
@@ -87,7 +93,7 @@ if(isset($_SESSION["user_name"]))
 			   border-top: 1px solid #D3D3D3;
 			   margin-top:5px;
 			   margin-bottom:5px;
-			}			
+			}	
 		</style>			
 	</head>
 	<body>
@@ -103,14 +109,21 @@ if(isset($_SESSION["user_name"]))
 						<li id="customFilter" class="dropdown-item">Custom Filter</a></li>				
 					</ul>
 				</div>
-			</div>					
-			<span class="navbar-brand" style="font-size:25px;"><i class="fa fa-bolt"></i> Sales</span>
-			<a href="#" class="btn btn-sm" role="button" style="background-color:#54698D;color:white;float:right;margin-right:3%;" data-toggle="modal" data-target="#saleModal"><i class="fa fa-bolt"></i> New Sale</a>			
+			</div>
+			<span class="navbar-brand" style="font-size:25px;"><i class="fa fa-bolt"></i> Sales</span><?php
+			if($_SESSION['role'] != 'marketing')
+			{																							?>				
+				<a href="#" class="btn btn-sm" role="button" style="background-color:#54698D;color:white;float:right;margin-right:3%;" data-toggle="modal" data-target="#saleModal"><i class="fa fa-bolt"></i> New Sale</a><?php
+			}	
+			else
+			{											 ?>
+				<p style="float:right;margin-right:3%;"/><?php
+			}											 ?>
 		</nav>
 		<div style="width:100%;" class="mainbody">	
 			<div id="snackbar"><i class="fa fa-bolt"></i>&nbsp;&nbsp;Sale detail saved successfully !!!</div>
+			<br/><br/>
 			<div align="center">
-				<br/><br/>
 				<table class="ratetable table table-hover table-bordered" <?php if($range == 'Today') echo 'style="width:35%;"'; else echo 'style="width:20%;"';?> id="ratetable">
 					<thead>
 						<tr class="table-info">
@@ -133,8 +146,8 @@ if(isset($_SESSION["user_name"]))
 									<td><?php echo $productSumMap[$product];?></td><?php 
 									if($range == 'Today')
 									{																												?>
-										<td><?php echo $rate.'/-';?></td>
-										<td><?php if(isset($discountMap[$product])) echo $discountMap[$product].'/-';?></td>						<?php
+										<td><?php if($_SESSION['role'] != 'marketing') echo $rate.'/-';?></td>
+										<td><?php if(isset($discountMap[$product]) && $_SESSION['role'] != 'marketing') echo $discountMap[$product].'/-';?></td>						<?php
 									}																												?>	
 								</tr>																												<?php
 							}	
@@ -191,13 +204,25 @@ if(isset($_SESSION["user_name"]))
 							$finalRate = $rate - $cd - $wd - $sale['discount'];																					?>	
 							
 							<tr data-id="<?php echo $sale['id'];?>" data-params="<?php echo explode('?',$_SERVER['REQUEST_URI'])[1];?>" class="saleId" style="cursor:pointer;">
-								<td><?php echo date('d-m-Y',strtotime($sale['date'])); ?></td>
-								<td><?php echo $clientNamesMap[$sale['client']]; ?></td>
+								<td><?php echo date('d-m-Y',strtotime($sale['date'])).' '; ?></td>
+								<td><?php echo $clientNamesMap[$sale['client']]; 
+										  if(isset($sale['direct_order']))
+										  {
+											  if($sale['direct_order'] && !billStatus($sale['bill']))
+											  {									 ?>
+												  <i class="fas fa-asterisk" style="color:red"></i><?php
+											  }					
+											  if($sale['direct_order'] && billStatus($sale['bill']))
+											  {									 ?>
+												  <i class="fas fa-asterisk" style="color:green"></i><?php
+											  }
+										  }?>
+							    </td>
 								<td><?php echo $productDetailsMap[$sale['product']]['name'];?></td>
 								<td><?php echo $sale['qty']; ?></td>
 								<td><?php if($finalRate > 0 ) echo $finalRate.'/-';?></td>							
 								<td><?php echo $sale['bill']; ?></td>
-								<td><?php if(isset($truckNumbersMap[$sale['truck_no']])) echo $truckNumbersMap[$sale['truck_no']]; ?></td>
+								<td><?php if(isset($truckNumbersMap[$sale['truck']])) echo $truckNumbersMap[$sale['truck']]; ?></td>
 								<td><?php echo $sale['name'].'<br/><font>'.$sale['phone'].'</font>'; ?></td>
 								<td><?php echo $sale['remarks']; ?></td>
 								<td><?php echo $sale['address']; ?></td>
@@ -252,13 +277,13 @@ if(isset($_SESSION["user_name"]))
 								<td><?php echo $sale['qty']; ?></td>
 								<td><?php if($finalRate > 0 ) echo $finalRate.'/-';?></td>							
 								<td><?php echo $sale['bill']; ?></td>
-								<td><?php if(isset($truckNumbersMap[$sale['truck_no']])) echo $truckNumbersMap[$sale['truck_no']]; ?></td>
+								<td><?php if(isset($truckNumbersMap[$sale['truck']])) echo $truckNumbersMap[$sale['truck']]; ?></td>
 								<td><?php echo $sale['name'].'<br/><font>'.$sale['phone'].'</font>'; ?></td>
 							</tr>																																		<?php				
 						}																																				?>
 					</tbody>	
 				</table>
-			</div>			
+			</div>
 			<br/><br/><br/>
 		</div>
 		<script src="list.js"></script>

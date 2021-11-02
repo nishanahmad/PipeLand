@@ -19,7 +19,7 @@ if(isset($_SESSION["user_name"]))
 		$urlBlock = 1;
 	}
 	
-	$engObjects =  mysqli_query($con,"SELECT id,name,mobile FROM ar_details WHERE type LIKE '%Engineer%' AND isActive = 1 ORDER BY name ASC ") or die(mysqli_error($con));
+	$engObjects =  mysqli_query($con,"SELECT id,name,mobile FROM ar_details WHERE type LIKE '%Engineer%' ORDER BY name ASC ") or die(mysqli_error($con));
 	foreach($engObjects as $eng)
 	{
 		$engMap[$eng['id']]['name'] = $eng['name'];
@@ -33,18 +33,18 @@ if(isset($_SESSION["user_name"]))
 	
 	if($urlBlock == 1)
 	{
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 10 AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 36");	
-		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 10 AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 37");	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 10 AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 36");	
+		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 10 AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 37");	
 	}
 	else if($urlBlock == 2)
 	{
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 20 AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 41");	
-		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 20 AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 42");	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 20 AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 41");	
+		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND DAYOFMONTH(`entry_date`) <= 20 AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 42");	
 	}		
 	else if($urlBlock == 3)
 	{
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 46");	
-		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 47");	
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND ar_id IN ('$engIds') GROUP BY ar_id") or die(mysqli_error($con)."line 46");	
+		$engSales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND '$urlYear' = year(`entry_date`) AND '$urlMonth' = month(`entry_date`) AND eng_id IN ('$engIds') GROUP BY eng_id") or die(mysqli_error($con)."line 47");	
 	}
 	
 	foreach($sales as $sale)
@@ -231,7 +231,7 @@ function getPrevPoints($engList,$endYear,$endMonth)
 		
 		$engIds = implode("','",array_keys($engMap));	
 		
-		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND ar_id IN ('$engIds') GROUP BY ar_id" ) or die(mysqli_error($con));		 	 
+		$sales = mysqli_query($con,"SELECT ar_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$startDate' AND entry_date <= '$endDate' AND ar_id IN ('$engIds') GROUP BY ar_id" ) or die(mysqli_error($con));		 	 
 		foreach($sales as $sale)
 		{
 			$engId = $sale['ar_id'];				
@@ -239,7 +239,7 @@ function getPrevPoints($engList,$endYear,$endMonth)
 			$total = $sale['SUM(qty)'] - $sale['SUM(return_bag)'];
 			$engMap[$engId]['prevPoints'] = $engMap[$engId]['prevPoints'] + $total;	
 		}
-		$sales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE entry_date >= '$startDate' AND entry_date <= '$endDate' AND eng_id IN ('$engIds') GROUP BY eng_id" ) or die(mysqli_error($con));		 	 
+		$sales = mysqli_query($con,"SELECT eng_id,SUM(qty),SUM(return_bag) FROM nas_sale WHERE deleted IS NULL AND entry_date >= '$startDate' AND entry_date <= '$endDate' AND eng_id IN ('$engIds') GROUP BY eng_id" ) or die(mysqli_error($con));		 	 
 		foreach($sales as $sale)
 		{
 			$engId = $sale['eng_id'];				

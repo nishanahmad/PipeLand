@@ -1,10 +1,5 @@
 
 #main {
-  background: url("../images/loading-bg.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940");
-  background-attachment: fixed;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
   padding:75px;
 }
 

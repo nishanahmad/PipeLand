@@ -52,7 +52,7 @@ if(isset($_SESSION["user_name"]))
 	$zeroTargetIds = implode("','",array_keys($zeroTargetMap));	
 	
 	$arMap = array();
-	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,whatsapp,shop_name,sap_code FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type LIKE '%AR%' ORDER BY name ASC ") or die(mysqli_error($con));		 
+	$arObjects =  mysqli_query($con,"SELECT id,name,mobile,whatsapp,shop_name,sap_code FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type != 'Engineer' ORDER BY name ASC ") or die(mysqli_error($con));		 
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']]['name'] = $ar['name'];

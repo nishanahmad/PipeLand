@@ -43,7 +43,7 @@ if(isset($_SESSION["user_name"]))
 	}
 		
 		
-	$arObjects = mysqli_query($con, "SELECT * FROM ar_details WHERE Type LIKE '%AR%' ORDER BY name ASC") or die(mysqli_error($con));
+	$arObjects = mysqli_query($con, "SELECT * FROM ar_details WHERE Type != 'Engineer' ORDER BY name ASC") or die(mysqli_error($con));
 	foreach($arObjects as $ar)
 	{
 		$arMap[$ar['id']] = $ar['name'];
