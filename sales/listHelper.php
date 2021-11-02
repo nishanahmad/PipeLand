@@ -33,7 +33,7 @@ function getSales($con,$sql)
 				$saleArray['phone'] = $sale['customer_phone'];
 				$saleArray['remarks'] = $sale['remarks'];
 				$saleArray['address'] = $sale['address1'];
-				$saleArray['direct_order'] = $sale['direct_order'];
+				//$saleArray['direct_order'] = $sale['direct_order'];
 				
 				$mainMap[] = $saleArray;			
 			}			
@@ -57,7 +57,7 @@ function getSales($con,$sql)
 		$saleArray['phone'] = $sale['customer_phone'];
 		$saleArray['remarks'] = $sale['remarks'];
 		$saleArray['address'] = $sale['address1'];
-		$saleArray['direct_order'] = $sale['direct_order'];
+		//$saleArray['direct_order'] = $sale['direct_order'];
 		
 		$mainMap[] = $saleArray;
 	}
