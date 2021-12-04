@@ -67,11 +67,12 @@ if(isset($_SESSION["user_name"]))
 	if(isset($zeroTargetMap))
 		$zeroTargetIds = implode("','",array_keys($zeroTargetMap));		
 	
-	$arList = mysqli_query($con,"SELECT id, name, mobile, shop_name FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type != 'Engineer' ") or die(mysqli_error($con));		 
+	$arList = mysqli_query($con,"SELECT id, name, mobile, whatsapp, shop_name FROM ar_details WHERE id NOT IN ('$zeroTargetIds') AND Type != 'Engineer' ") or die(mysqli_error($con));		 
 	foreach($arList as $arObject)
 	{
 		$arNameMap[$arObject['id']] = $arObject['name'];
 		$arMobileMap[$arObject['id']] = $arObject['mobile'];
+		$arWhatsappMap[$arObject['id']] = $arObject['whatsapp'];
 		$arShopMap[$arObject['id']] = $arObject['shop_name'];
 		$arExtraMap[$arObject['id']] = 0;
 	}
@@ -221,7 +222,8 @@ if(isset($_SESSION["user_name"]))
 					<tr class="table-success">
 						<th style="text-align:left;width:24%;">AR</th>
 						<th style="text-align:left;width:27%;">SHOP</th>
-						<th style="width:14%;">MOBILE</th>
+						<th style="width:14%;">Mobile</th>
+						<th style="width:14%;">Whatsapp</th>
 						<th style="width:8%;">Spcl Target</th>
 						<th style="width:8%;">Actual Sale</th>
 						<th style="width:8%;">Balance</th>
@@ -269,6 +271,7 @@ if(isset($_SESSION["user_name"]))
 						<td style="text-align:left;"><?php echo $arName;?></td>
 						<td style="text-align:left;"><?php echo $arShopMap[$arId];?></td>
 						<td><?php echo $arMobileMap[$arId];?></td>
+						<td><?php echo $arWhatsappMap[$arId];?></td>
 						<td><?php echo $spclTarget;?></td>
 						<td><?php echo $sale;?></td>
 						<td><?php echo $balance ?></td>			
@@ -321,7 +324,7 @@ if(isset($_SESSION["user_name"]))
 <script type="text/javascript" language="javascript" >
 $(document).ready(function() {		
 	$(".maintable tbody tr").each(function(){
-		var extra = $(this).find("td:eq(7)").text();   
+		var extra = $(this).find("td:eq(8)").text();   
 		if (extra != '0'){
 		$(this).addClass('selected');
 		}
